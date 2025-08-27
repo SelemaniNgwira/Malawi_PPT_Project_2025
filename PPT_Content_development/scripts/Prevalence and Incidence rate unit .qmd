@@ -1,0 +1,82 @@
+---
+title: "Prevalence and Incidence rate unit "
+output: html_document
+---
+
+# loading packages 
+```{r}
+library(rio)
+library(tidyverse)
+library(here)
+library(janitor)
+
+
+```
+
+
+# loading data set
+```{r}
+
+df1 <- import(here("data", "Daily_Cholera_Data.xlsx")) |> 
+  clean_names() |> 
+  select(date, district, cases, deaths)
+  
+
+```
+
+## data preparation.
+
+```{r}
+df2<- df1 |> 
+  mutate(epiweek=floor_date(date, unit = "weeks")) |> 
+  group_by(epiweek, cases, deaths) |> 
+  summarise(cases=sum(cases), 
+            deaths=sum(deaths)) |> 
+  # ungroup() |> 
+  filter(epiweek>="2022-01-01")
+
+
+```
+
+
+
+
+
+```{r}
+
+
+# Scaling factor so deaths align with secondary axis max = 100
+scale_factor <- max(df2$cases, na.rm = TRUE) / 100
+
+
+
+df2 |>
+  ggplot(aes(x = epiweek)) +
+  # Cases as bars
+  geom_col(aes(y = cases), fill = "orange") +
+  # Deaths as line (scaled)
+  geom_line(aes(y = deaths * scale_factor), 
+            color = "red", size = 1) +
+  # Primary and secondary axes
+  scale_y_continuous(
+    name = "Cases",
+    sec.axis = sec_axis(~ . / scale_factor, 
+                        name = "Deaths (max = 100)")
+  ) +
+  labs(
+    x = "Epidemiological Week",
+    title = "Weekly Epi curve of cholera cases in Malawi March 2022 to July 2024"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.title.y.left = element_text(color = "orange", size = 12),
+    axis.title.y.right = element_text(color = "red", size = 12),
+    plot.title = element_text(hjust = 0.5, size = 14, face = "bold")
+  )
+
+
+
+```
+
+
+
