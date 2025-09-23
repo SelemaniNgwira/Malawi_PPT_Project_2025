@@ -1,0 +1,71 @@
+---
+title: "Table17_22"
+format: html
+---
+
+
+
+
+
+```{r}
+#| echo: false
+
+library(tidyverse)
+library(lubridate)
+library(readxl)
+library(janitor)
+library(gt)
+library(rio)
+library(here)
+library(gtsummary)
+library(pacman)
+p_load(cleanepi)
+
+# loading data 
+
+ppt_data <- import(here("data", "PPT_study.xlsx")) %>%
+  clean_names()
+
+```
+
+
+
+## Table 17.
+
+```{r}
+#| echo: false
+
+```
+
+## Table 18.
+
+```{r}
+#| echo: false
+
+```
+
+## Table 19.
+```{r}
+#| echo: false
+
+```
+
+## Table 20.
+
+```{r}
+#| echo: false
+
+```
+
+## Table 21.
+```{r}
+#| echo: false
+
+```
+
+## Table 22.
+```{r}
+#| echo: false
+
+```
+

@@ -1,0 +1,75 @@
+---
+title: "Table6_11"
+format: html
+---
+
+
+
+```{r}
+#| echo: false
+
+library(tidyverse)
+library(lubridate)
+library(readxl)
+library(janitor)
+library(gt)
+library(rio)
+library(here)
+library(gtsummary)
+library(pacman)
+p_load(cleanepi)
+
+# loading data 
+
+ppt_data <- import(here("data", "PPT_study.xlsx")) %>%
+  clean_names()
+
+```
+
+
+
+## Table 6. 
+
+
+
+```{r}
+#| echo: false
+
+```
+
+## Table 7.
+
+```{r}
+#| echo: false
+
+```
+
+## Table 8.
+
+```{r}
+#| echo: false
+
+```
+
+## Table 9.
+
+```{r}
+#| echo: false
+
+```
+
+## Table 10.
+
+```{r}
+#| echo: false
+
+```
+
+## Table 11.
+```{r}
+#| echo: false
+
+```
+
+
+

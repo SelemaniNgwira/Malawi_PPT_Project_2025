@@ -1,0 +1,65 @@
+---
+title: "table12_16"
+format: html
+---
+
+
+
+```{r}
+#| echo: false
+
+library(tidyverse)
+library(lubridate)
+library(readxl)
+library(janitor)
+library(gt)
+library(rio)
+library(here)
+library(gtsummary)
+library(pacman)
+p_load(cleanepi)
+
+# loading data 
+
+ppt_data <- import(here("data", "PPT_study.xlsx")) %>%
+  clean_names()
+
+```
+
+
+
+## Table 12.
+
+```{r}
+#| echo: false
+
+```
+
+## Table 13.
+
+```{r}
+#| echo: false
+
+```
+
+## Table 14.
+
+```{r}
+#| echo: false
+
+```
+
+## Table 15.
+```{r}
+#| echo: false
+
+```
+
+## Table 16.
+
+```{r}
+#| echo: false
+
+```
+
+

@@ -1,0 +1,73 @@
+---
+title: "ppt_study_analysis Table1_5"
+format: html
+---
+
+
+```{r}
+#| echo: false
+
+library(tidyverse)
+library(lubridate)
+library(readxl)
+library(janitor)
+library(gt)
+library(rio)
+library(here)
+library(gtsummary)
+library(pacman)
+p_load(cleanepi)
+
+# loading data 
+
+ppt_data <- import(here("data", "PPT_study.xlsx")) %>%
+  clean_names()
+
+```
+
+
+## Table 1: Demographic characteristics of study participants (N=200)
+
+
+
+```{r}
+#| echo: false
+
+```
+
+
+## Table 2: 
+
+
+
+```{r}
+#| echo: false
+
+```
+
+
+## Table 3:
+
+
+```{r}
+#| echo: false
+
+```
+
+## Table 4:
+
+
+```{r}
+#| echo: false
+
+```
+
+
+## Table 5:
+
+
+```{r}
+#| echo: false
+
+```
+
