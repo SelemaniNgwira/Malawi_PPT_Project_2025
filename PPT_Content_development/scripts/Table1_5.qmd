@@ -1,8 +1,4 @@
-(---
-title: "ppt_study_analysis Table1_5"
-format: html
----
-
+(--- title: "ppt_study_analysis Table1_5" format: html ---
 
 ```{r}
 #| echo: false
@@ -16,25 +12,84 @@ library(rio)
 library(here)
 library(gtsummary)
 library(pacman)
-p_load(cleanepi)
+p_load(cleanepi, cowplot)
 
 # loading data 
 
 ppt_data <- import(here("data", "PPT_study.xlsx")) %>%
   clean_names()
 
-# converting character variables to factors and convert them to lower cases. 
-ppt_data<- ppt_data |> 
-  mutate(across(where(is.character), as.factor)) |> 
-   mutate(across(where(is.factor), str_to_lower)) |> 
-  mutate(across(where(is.character), str_to_lower))
+# # converting character variables to factors and convert them to lower cases. 
+ppt_data <- ppt_data |>
+  mutate(across(where(is.character), str_to_lower)) |>
+  mutate(across(where(is.character), ~ str_replace_all(.x, "_", " "))) |>
+  mutate(across(where(is.character), as.factor)) %>%
+  mutate(familiar_digitalhealth=recode(
+      familiar_digitalhealth,
+      "heard of but never used"="not familiar"),
+      
+      believe_report_ill=recode(
+      believe_report_ill,
+      "strongly agree ndikugwirizana nazo kwam"="strongly agree", 
+      "agree ndikugwirizana nazo"="agree", 
+      "neutral osakhala mbali iliyonse"= "neutral",
+      "strongly disagree sindikugwirizana nazo"="strongly disagree"),
+      
+       
+      comfort_report=recode(
+      comfort_report,
+      "strongly agree ndikugwirizana nazo kwam"="strongly agree", 
+      "agree ndikugwirizana nazo"="agree", 
+      "neutral osakhala mbali iliyonse"= "neutral",
+      "strongly disagree sindikugwirizana nazo"="strongly disagree"),
+      
+      use_digitalsystem=recode(
+      use_digitalsystem,
+      "strongly agree ndikugwirizana nazo kwam"="strongly agree", 
+      "agree ndikugwirizana nazo"="agree", 
+      "neutral osakhala mbali iliyonse"= "neutral",
+      "strongly disagree sindikugwirizana nazo"="strongly disagree"),
+      
+      
+      digital_safe=recode(
+      digital_safe,
+      "strongly agree ndikugwirizana nazo kwam"="strongly agree", 
+      "agree ndikugwirizana nazo"="agree", 
+      "neutral osakhala mbali iliyonse"= "neutral",
+      "strongly disagree sindikugwirizana nazo"="strongly disagree"),
+      
+      join_program=recode(
+      join_program,
+      "strongly agree ndikugwirizana nazo kwam"="strongly agree", 
+      "agree ndikugwirizana nazo"="agree", 
+      "neutral osakhala mbali iliyonse"= "neutral",
+      "strongly disagree sindikugwirizana nazo"="strongly disagree"),
+      
+      
+      digital_detect=recode(
+      digital_detect,
+      "strongly agree ndikugwirizana nazo kwam"="strongly agree", 
+      "agree ndikugwirizana nazo"="agree", 
+      "neutral osakhala mbali iliyonse"= "neutral",
+      "strongly disagree sindikugwirizana nazo"="strongly disagree"),
+      
+      accept_digitaltool=recode(
+      accept_digitaltool,
+      "strongly agree ndikugwirizana nazo kwam"="strongly agree", 
+      "agree ndikugwirizana nazo"="agree", 
+      "neutral osakhala mbali iliyonse"= "neutral",
+      "strongly disagree sindikugwirizana nazo"="strongly disagree")
+        )
+
+
+
+
 
 
 
 
 
 ```
-
 
 ## Table 1: Demographic characteristics of study participants (N=200)
 
@@ -67,42 +122,191 @@ ppt_data |>
 
 ```
 
-# Descriptive Analysis of Awareness of Digital Health Surveillance
+# Descriptive Analysis on Awareness of Digital Health Surveillance
 
-## Table 2: 
+## Table 2:
 
 ```{r}
 #| echo: false
 
 table2 <- ppt_data |> 
-select()
+select(know_digital_health_surve, 
+       report_ill, 
+       familiar_digitalhealth,# change the value of " heard of nut never used" to "not familiar"
+       receive_phinformation_phone, 
+       digital_report)
+ 
+
+table2 %>% 
+  tbl_summary(
+    
+    label = list(
+     know_digital_health_surve ~"Aware of Digital Health Surveillance", 
+     report_ill~"Reported illness before using electronic gauges", 
+     familiar_digitalhealth ~ "Familiar with Digital health Tools",
+     receive_phinformation_phone~ "Received health information via Phone", 
+     digital_report~ "Seen or Heard Campaigns promoting Digital Reporting"),
+    
+    type = list( all_dichotomous()~ "categorical"),
+    statistic = list(
+      all_dichotomous()~ "categorical",
+      all_continuous() ~ "{mean} ({sd})",
+      all_categorical() ~ "{n} ({p}%)"
+    ),
+    digits = all_continuous() ~ 2
+    
+  )
+
+# preparing data set for plot1 
+
+graph1 <- ppt_data %>% 
+  select(
+    where_healthsur_healthworker, 
+    where_healthsur_tv, 
+    where_healthsur_community, 
+    where_healthsur_socialmedia, 
+    where_healthsur_sms, 
+    where_healthsur_faf
+  ) %>% 
+  rename(
+   healthworker= where_healthsur_healthworker, 
+   tv_radio=where_healthsur_tv, 
+   community_meeting=where_healthsur_community, 
+    social_media= where_healthsur_socialmedia, 
+   sms_from_moh=where_healthsur_sms, 
+    friends_family= where_healthsur_faf
+  ) %>% 
+  pivot_longer(
+    cols = c(1:6), 
+    names_to = "Variable", 
+    values_to = "Frequncy"
+  ) %>% 
+  filter(Frequncy==1) %>% 
+  group_by(Variable) %>% 
+  summarise(Frequncy= sum(Frequncy)) %>% 
+  mutate(precent= round(Frequncy/sum(Frequncy), 3)*100)
+
+# plotting the chart 1
+graph1<- graph1 %>% 
+ ggplot(aes(x = reorder(Variable, precent), y = precent)) +
+  geom_col(fill = "steelblue") +
+  geom_label(aes(label = precent), vjust = 1.5, size = 4) +
+  labs(
+    title = "Awareness Sources of Digital Health Surveillance",
+    x = "Sources",
+    y = "Percentage"
+  ) +
+  theme_classic() +
+  theme(
+    legend.position = "none",   # remove legends if any
+    plot.title = element_text(hjust = 0.5, face = "bold") # center & bold title
+  )+
+  coord_flip()
+
+# preparing data set for plot 2 
+
+graph2 <- ppt_data %>% 
+  select(
+    receive_via_healthworker, 
+    receive_via_tv, 
+    receive_via_community, 
+    receive_via_socialmedia, 
+    receive_via_sms, 
+    receive_via_faf
+  ) %>% 
+  rename(
+   healthworker=receive_via_healthworker, 
+   tv_radio=receive_via_tv, 
+    community_meeting=receive_via_community, 
+    social_media=receive_via_socialmedia, 
+    sms_from_moh=receive_via_sms, 
+    freend_family=receive_via_faf
+  ) %>% 
+  pivot_longer(
+    cols = c(1:6), 
+    names_to = "Variable", 
+    values_to = "Frequncy"
+  ) %>% 
+  filter(Frequncy==1) %>% 
+  group_by(Variable) %>% 
+  summarise(Frequncy= sum(Frequncy)) %>% 
+  mutate(precent= round(Frequncy/sum(Frequncy), 3)*100)
+
+# plotting the chart 2
+graph2<- graph2 %>% 
+  ggplot(aes(x = reorder(Variable, precent), y = precent)) +
+  geom_col(fill = "steelblue") +
+  geom_label(aes(label = precent), vjust = 1.5, size = 4) +
+  labs(
+    title = "Channel of recieve health information",
+    x = "Sources",
+    y = "Percentage"
+  ) +
+  theme_classic() +
+  theme(
+    legend.position = "none",   # remove legends if any
+    plot.title = element_text(hjust = 0.5, face = "bold") # center & bold title
+  )+
+  coord_flip()
+
+
+plot1<- plot_grid(graph1, graph2, labels = "AUTO")
+
+ggsave(
+  filename = here("output", "image", "plot1.png"),
+  plot = plot1,
+  dpi = 650,
+  width = 12,
+  height = 6,
+  units = "in"
+)
+
+
+
+
 
 
 ```
 
 
-## Table 3:
+### Source and channels used for awareness and receive of digital health information
+![](images/plot1.png)
 
+
+# Descriptve analysis of attitudes towards digital health surveillance 
+
+## Table 3:
 
 ```{r}
 #| echo: false
+
+table3<- ppt_data %>% 
+  select(
+    believe_report_ill, 
+    comfort_report,
+    use_digitalsystem, 
+    digital_safe, 
+    join_program, 
+    digital_detect, 
+    accept_digitaltool)
+
+
+
+
+
 
 ```
 
 ## Table 4:
 
-
 ```{r}
 #| echo: false
 
 ```
-
 
 ## Table 5:
 
-
 ```{r}
 #| echo: false
 
 ```
-
