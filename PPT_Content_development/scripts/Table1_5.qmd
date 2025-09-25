@@ -30,56 +30,49 @@ ppt_data <- ppt_data |>
       
       believe_report_ill=recode(
       believe_report_ill,
-      "strongly agree ndikugwirizana nazo kwam"="strongly agree", 
-      "agree ndikugwirizana nazo"="agree", 
-      "neutral osakhala mbali iliyonse"= "neutral",
-      "strongly disagree sindikugwirizana nazo"="strongly disagree"),
+      "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree"),
       
-       
       comfort_report=recode(
       comfort_report,
-      "strongly agree ndikugwirizana nazo kwam"="strongly agree", 
-      "agree ndikugwirizana nazo"="agree", 
-      "neutral osakhala mbali iliyonse"= "neutral",
-      "strongly disagree sindikugwirizana nazo"="strongly disagree"),
+      "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree", 
+      "neutral  osakhala mbali iliyonse"= "neutral"),
       
       use_digitalsystem=recode(
       use_digitalsystem,
-      "strongly agree ndikugwirizana nazo kwam"="strongly agree", 
-      "agree ndikugwirizana nazo"="agree", 
-      "neutral osakhala mbali iliyonse"= "neutral",
-      "strongly disagree sindikugwirizana nazo"="strongly disagree"),
+      "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree" 
+      
+      ),
       
       
       digital_safe=recode(
       digital_safe,
-      "strongly agree ndikugwirizana nazo kwam"="strongly agree", 
-      "agree ndikugwirizana nazo"="agree", 
-      "neutral osakhala mbali iliyonse"= "neutral",
-      "strongly disagree sindikugwirizana nazo"="strongly disagree"),
+     "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree", 
+      "neutral  osakhala mbali iliyonse"= "neutral"),
       
       join_program=recode(
       join_program,
-      "strongly agree ndikugwirizana nazo kwam"="strongly agree", 
-      "agree ndikugwirizana nazo"="agree", 
-      "neutral osakhala mbali iliyonse"= "neutral",
-      "strongly disagree sindikugwirizana nazo"="strongly disagree"),
+      "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree", 
+      "neutral  osakhala mbali iliyonse"= "neutral", 
+       "strongly disagree  sindikugwirizana nazo"="strongly disagree"),
       
       
       digital_detect=recode(
       digital_detect,
-      "strongly agree ndikugwirizana nazo kwam"="strongly agree", 
-      "agree ndikugwirizana nazo"="agree", 
-      "neutral osakhala mbali iliyonse"= "neutral",
-      "strongly disagree sindikugwirizana nazo"="strongly disagree"),
+       "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree"),
       
       accept_digitaltool=recode(
       accept_digitaltool,
-      "strongly agree ndikugwirizana nazo kwam"="strongly agree", 
-      "agree ndikugwirizana nazo"="agree", 
-      "neutral osakhala mbali iliyonse"= "neutral",
-      "strongly disagree sindikugwirizana nazo"="strongly disagree")
-        )
+      "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree", 
+      "neutral  osakhala mbali iliyonse"= "neutral", 
+      "strongly disagree  sindikugwirizana nazo"="strongly disagree"
+        ))
 
 
 
@@ -288,11 +281,33 @@ table3<- ppt_data %>%
     digital_safe, 
     join_program, 
     digital_detect, 
-    accept_digitaltool)
+    accept_digitaltool) %>% 
+  rename(
+    
+  "Believe  using phone to report illness can improve health in community"=believe_report_ill, 
+   "Feel comfortable reporting health sysmptoms through SMS or Mobile apps like Chatbots"= comfort_report,
+  "Accept using digital system if it was approval by MoH"=use_digitalsystem, 
+   "Believe person health data will be safe when submitted through digital tools"= digital_safe, 
+    "Willing to participant in digital disease surveillance programs"=join_program, 
+    "Trust digital systems can detect disease outbreaks early"=digital_detect, 
+    "People can accept digital surveillance tools once properly explained"=accept_digitaltool  
+  )
 
 
-
-
+table3 %>% 
+  pivot_longer(
+    cols = c(1:7), 
+    names_to = "Statement", 
+    values_to = "Level_of_agreement"
+  ) %>% 
+  group_by(
+    Statement, 
+    Level_of_agreement
+  ) %>% 
+  tbl_summary(
+    by= Level_of_agreement, 
+    percent = "row",
+     )
 
 
 ```
@@ -301,6 +316,14 @@ table3<- ppt_data %>%
 
 ```{r}
 #| echo: false
+table4 <- ppt_data %>% 
+  select(
+    rece_repo_healthinfo, 
+    digital_workwell, 
+    
+  )
+
+
 
 ```
 
