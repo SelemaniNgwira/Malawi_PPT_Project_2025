@@ -1,4 +1,4 @@
----
+(---
 title: "ppt_study_analysis Table1_5"
 format: html
 ---
@@ -23,25 +23,60 @@ p_load(cleanepi)
 ppt_data <- import(here("data", "PPT_study.xlsx")) %>%
   clean_names()
 
+# converting character variables to factors and convert them to lower cases. 
+ppt_data<- ppt_data |> 
+  mutate(across(where(is.character), as.factor)) |> 
+   mutate(across(where(is.factor), str_to_lower)) |> 
+  mutate(across(where(is.character), str_to_lower))
+
+
+
+
+
 ```
 
 
 ## Table 1: Demographic characteristics of study participants (N=200)
 
-
-
 ```{r}
 #| echo: false
+
+ppt_data |> 
+  select(gender, age, edu, locat, district, electronic_have, internet_have) |>
+  mutate(electronic_have = as.factor(electronic_have)) |> 
+  tbl_summary(
+    
+      label = list(
+      gender ~ "Gender", 
+      age ~ "Age (years)",
+      edu ~ "Education level",
+      locat ~ "Location",
+      district ~ "District", 
+      electronic_have~ " Owenship of phone", 
+      internet_have~ " Owenship of smart phone"
+    ),
+    type = list( all_dichotomous()~ "categorical"),
+    statistic = list(
+      all_dichotomous()~ "categorical",
+      all_continuous() ~ "{mean} ({sd})",
+      all_categorical() ~ "{n} ({p}%)"
+    ),
+    digits = all_continuous() ~ 2
+  )
+
 
 ```
 
+# Descriptive Analysis of Awareness of Digital Health Surveillance
 
 ## Table 2: 
 
-
-
 ```{r}
 #| echo: false
+
+table2 <- ppt_data |> 
+select()
+
 
 ```
 
