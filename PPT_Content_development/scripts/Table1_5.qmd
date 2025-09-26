@@ -12,7 +12,7 @@ library(rio)
 library(here)
 library(gtsummary)
 library(pacman)
-p_load(cleanepi, cowplot)
+p_load(cleanepi, cowplot, cardx)
 
 # loading data 
 
@@ -72,12 +72,31 @@ ppt_data <- ppt_data |>
       "agree  ndikugwirizana nazo"="agree", 
       "neutral  osakhala mbali iliyonse"= "neutral", 
       "strongly disagree  sindikugwirizana nazo"="strongly disagree"
-        ))
-
-
-
-
-
+        ), 
+     rece_repo_alert=recode(
+       rece_repo_alert, 
+       "in person"="in-person"
+     )) %>%
+  mutate(
+    age_group = case_when(
+       age >= 18 & age <= 24 ~ "18-24",
+       age >= 25 & age <= 29 ~ "25-29",
+       age >= 30 & age <= 34 ~ "30-34",
+       age >= 35 & age <= 39 ~ "35-39",
+       age >= 40 & age <= 44 ~ "40-44",
+       age >= 45 & age <= 49 ~ "45-49",
+       age >= 50 & age <= 54 ~ "50-54",
+       age >= 55 & age <= 59 ~ "55-59",
+       age >= 60 & age <= 64 ~ "60-64",
+       age >= 65 & age <= 69 ~ "65-69",
+       age >= 70 & age <= 74 ~ "70-74",
+       age >= 75 & age <= 79 ~ "75-79",
+       age >= 80 & age <= 84 ~ "80-84",
+       age >= 85             ~ "85+",
+       TRUE                  ~ "Unknown"
+    ))
+  
+demo_v<-c("gender", "age_group", "edu", "locat", "district")
 
 
 
@@ -312,6 +331,8 @@ table3 %>%
 
 ```
 
+
+# Descriptive analysis on public practice in  use of digital health surveillance tool. 
 ## Table 4:
 
 ```{r}
@@ -319,17 +340,184 @@ table3 %>%
 table4 <- ppt_data %>% 
   select(
     rece_repo_healthinfo, 
+    rece_repo_alert,
     digital_workwell, 
+    reported_12month, 
+    frequency_to_access
+    
+  )
+
+
+table4 %>% 
+  tbl_summary(
+    
+      label = list(
+     rece_repo_healthinfo ~"Use a Mobile phone or App to receive or report health information", 
+     rece_repo_alert~"Prefered methods for reporting symptoms or receiving alerts", 
+     digital_workwell ~ "Community thinks digital health surveillance works well",
+     reported_12month~ "In last 12 Month, reported health related information using phone or digital tool", 
+     frequency_to_access~ "Frequncy of using phone to access health service or information"),
+    
+    type = list( all_dichotomous()~ "categorical"),
+    statistic = list(
+      all_dichotomous()~ "categorical",
+    all_categorical() ~ "{n} ({p}%)"
+    ),
+    digits = all_continuous() ~ 2
+    
+  )
+
+
+```
+
+# Motivation factors to participation in digital health surveillance  
+
+```{r}
+#| echo: false
+
+
+plot2 <- ppt_data %>% 
+  select(
+    motivate_healthsur_result, 
+    motivate_healthsur_advice, 
+    motivate_healthsur_easysystem, 
+    motivate_healthsur_helpcom, 
+    motivate_healthsur_trustmoh, 
+    motivate_healthsur_incentive, 
+    ) %>% 
+  rename(
+    knowning_results=motivate_healthsur_result, 
+    Receiving_adcice=motivate_healthsur_advice, 
+    Easy_to_use_system=motivate_healthsur_easysystem, 
+    Helping_Community=motivate_healthsur_helpcom, 
+    Trust_in_MoH=motivate_healthsur_trustmoh, 
+    Incentive=motivate_healthsur_incentive, 
+    
     
   )
 
 
 
+p2<- plot2  %>% 
+  pivot_longer(
+    cols = c(1:6), 
+    names_to = "Motives",
+    values_to = "Freq"
+    ) %>% 
+  filter(Freq==1) %>% 
+  group_by(Motives) %>% 
+  summarise(Freq=sum(Freq)) %>% 
+  mutate(Motives=gsub("_", " ", Motives)) %>% 
+  ggplot(
+    aes(  reorder(x=Motives, Freq), y=Freq)
+  )+
+  geom_col(fill="steelblue")+
+  theme_minimal()+
+  coord_flip()+
+  labs(
+    title = "Motivation factors to participation in digital health surveillance ",
+    x= " Factors", 
+    y= "Frequency"
+  )+
+  geom_label(aes(label = Freq, hjust = 1))
+
+
+
+
 ```
+
+
+# hindrance factors to participation in digital health surveillance 
+
+
+```{r}
+#| echo: false
+
+# preparing data set
+plot3 <- ppt_data %>% 
+  select(
+    stop_healthsur_poornet, 
+    stop_healthsur_nonelec, 
+    stop_healthsur_privacy, 
+    stop_healthsur_nofeedback
+  ) %>% 
+  rename(
+    
+   poor_network=stop_healthsur_poornet, 
+    No_confidence_with_electronic_gauges=stop_healthsur_nonelec, 
+    Privacy_concerns=stop_healthsur_privacy, 
+    No_feedback=stop_healthsur_nofeedback
+  
+  )
+
+p3<- plot3 %>% 
+  pivot_longer(
+    cols = c(1:4), 
+    names_to = "Hindrance_factors", 
+    values_to = "Freq"
+  ) %>% 
+  filter(Freq==1) %>% 
+  mutate(Hindrance_factors=gsub("_", " ",Hindrance_factors)) %>% 
+  group_by(Hindrance_factors) %>% 
+  summarise(Freq=sum(Freq)) %>% 
+  ggplot(
+    aes(  reorder(x=Hindrance_factors, Freq), y=Freq)
+  )+
+  geom_col(fill="steelblue")+
+  theme_minimal()+
+  coord_flip()+
+  labs(
+    title = "Hindrance factors to participation in digital health surveillance ",
+    x= " Hindrance Factors", 
+    y= "Frequency"
+  )+
+  geom_label(aes(label = Freq, hjust = 1))
+
+
+
+
+plot2<- plot_grid(p2, p3, labels = "AUTO")
+
+
+
+ggsave(
+  filename = here("output", "image", "plot2.png"),
+  plot = plot2,
+  dpi = 650,
+  width = 12,
+  height = 6,
+  bg="white",
+  units = "in"
+)
+
+
+```
+
+![](images/plot2.png)
+
 
 ## Table 5:
 
 ```{r}
 #| echo: false
 
+
+table5 <-ppt_data%>% 
+  select(demo_v, electronic_have)
+
+
+
+table5 %>% 
+  tbl_summary(
+    by=electronic_have, 
+    percent = "row"
+  ) %>% 
+  add_ci() %>% 
+  add_p()
+
+
+  
+
+
 ```
+
