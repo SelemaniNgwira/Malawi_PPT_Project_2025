@@ -1,12 +1,24 @@
 ---
 title: "Table6_11"
-format: html
+format: 
+  docx:
+    reference-doc: custom-reference.docx
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    df-print: default
+    tbl-cap-location: top
+    tbl-colwidths: auto
+    tbl-style: Table Grid
+fontsize: 12pt
+mainfont: "Times New Roman"
 ---
 
 
 
 ```{r}
 #| echo: false
+
 
 library(tidyverse)
 library(lubridate)
@@ -17,12 +29,100 @@ library(rio)
 library(here)
 library(gtsummary)
 library(pacman)
-p_load(cleanepi)
+p_load(cleanepi, cowplot, cardx)
 
 # loading data 
 
 ppt_data <- import(here("data", "PPT_study.xlsx")) %>%
   clean_names()
+
+# # converting character variables to factors and convert them to lower cases. 
+ppt_data <- ppt_data |>
+  mutate(across(where(is.character), str_to_lower)) |>
+  mutate(across(where(is.character), ~ str_replace_all(.x, "_", " "))) |>
+  mutate(across(where(is.character), as.factor)) %>%
+  mutate(familiar_digitalhealth=recode(
+      familiar_digitalhealth,
+      "heard of but never used"="not familiar"),
+      
+      believe_report_ill=recode(
+      believe_report_ill,
+      "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree"),
+      
+      comfort_report=recode(
+      comfort_report,
+      "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree", 
+      "neutral  osakhala mbali iliyonse"= "neutral"),
+      
+      use_digitalsystem=recode(
+      use_digitalsystem,
+      "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree" 
+      
+      ),
+      
+      
+      digital_safe=recode(
+      digital_safe,
+     "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree", 
+      "neutral  osakhala mbali iliyonse"= "neutral"),
+      
+      join_program=recode(
+      join_program,
+      "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree", 
+      "neutral  osakhala mbali iliyonse"= "neutral", 
+       "strongly disagree  sindikugwirizana nazo"="strongly disagree"),
+      
+      
+      digital_detect=recode(
+      digital_detect,
+       "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree"),
+      
+      accept_digitaltool=recode(
+      accept_digitaltool,
+      "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree", 
+      "neutral  osakhala mbali iliyonse"= "neutral", 
+      "strongly disagree  sindikugwirizana nazo"="strongly disagree"
+        ), 
+     rece_repo_alert=recode(
+       rece_repo_alert, 
+       "in person"="in-person"
+     )) %>%
+  mutate(
+    age_group = case_when(
+       age >= 18 & age <= 24 ~ "18-24",
+       age >= 25 & age <= 29 ~ "25-29",
+       age >= 30 & age <= 34 ~ "30-34",
+       age >= 35 & age <= 39 ~ "35-39",
+       age >= 40 & age <= 44 ~ "40-44",
+       age >= 45 & age <= 49 ~ "45-49",
+       age >= 50 & age <= 54 ~ "50-54",
+       age >= 55 & age <= 59 ~ "55-59",
+       age >= 60 & age <= 64 ~ "60-64",
+       age >= 65 & age <= 69 ~ "65-69",
+       age >= 70 & age <= 74 ~ "70-74",
+       age >= 75 & age <= 79 ~ "75-79",
+       age >= 80 & age <= 84 ~ "80-84",
+       age >= 85             ~ "85+",
+       TRUE                  ~ "Unknown"
+    ), 
+    
+  age_group2=case_when(
+    age >=18 & age <=39 ~ "18-39",
+    age >=40 & age <=59 ~ "40-59",
+    age >=60            ~ "60+",
+    TRUE                ~ "Unknown"   )) 
+  
+demo_v<-c("gender", "age_group2", "edu", "locat", "district")
+
+
+
 
 ```
 
@@ -35,6 +135,20 @@ ppt_data <- import(here("data", "PPT_study.xlsx")) %>%
 ```{r}
 #| echo: false
 
+
+table6 <- ppt_data %>%
+  select(all_of(demo_v), internet_have)
+
+
+table6 %>%
+  tbl_summary(by = internet_have) |> 
+  add_ci() %>% 
+  add_p() |> 
+  modify_header(label ~ "**Characteristic**") |>
+  modify_caption("**Association between demographic characteristics and access to internet**") |>
+  bold_labels() |> 
+  as_gt()
+
 ```
 
 ## Table 7.
@@ -42,12 +156,66 @@ ppt_data <- import(here("data", "PPT_study.xlsx")) %>%
 ```{r}
 #| echo: false
 
+
+table7 <- ppt_data %>%
+  select(all_of(demo_v), know_digital_health_surve)
+
+
+table7 %>%
+  tbl_summary(
+    by = know_digital_health_surve) |> 
+  add_ci() %>% 
+  add_p() |> 
+  modify_header(label ~ "**Characteristic**") |>
+  modify_caption("**Association between demographic characteristics and  heard about digital health surveillance**") |>
+  bold_labels() |>
+  as_gt()
+  
+ 
 ```
 
 ## Table 8.
 
 ```{r}
 #| echo: false
+
+table8 <- ppt_data %>%
+  select(demo_v,
+    where_healthsur_healthworker, 
+    where_healthsur_tv, 
+    where_healthsur_community, 
+    where_healthsur_socialmedia, 
+    where_healthsur_sms, 
+    where_healthsur_faf ) |> 
+ rename(
+   healthworker= where_healthsur_healthworker,
+   tv_radio=where_healthsur_tv,
+   community_meeting=where_healthsur_community,
+    social_media= where_healthsur_socialmedia,
+   sms_from_moh=where_healthsur_sms,
+    friends_family= where_healthsur_faf ) |> 
+ pivot_longer(
+   cols=c(healthworker, tv_radio, community_meeting, social_media, sms_from_moh, friends_family),
+   names_to="source_info",
+   values_to="yes_no" ) |> 
+   filter(yes_no==1) |> 
+   select(-yes_no)
+
+
+
+
+table8 %>%
+  tbl_summary(
+    by = source_info) |> 
+  add_ci() %>% 
+  add_p() |> 
+  modify_header(label ~ "**Characteristic**") |>
+  modify_caption("**Association between demographic characteristics and source of information about digital health surveillance**") |>
+  bold_labels() |>
+  as_gt()
+
+
+
 
 ```
 
@@ -56,6 +224,24 @@ ppt_data <- import(here("data", "PPT_study.xlsx")) %>%
 ```{r}
 #| echo: false
 
+
+
+table9 <- ppt_data %>%
+  select(demo_v, familiar_digitalhealth)
+
+
+
+table9 %>%  tbl_summary(
+    by = familiar_digitalhealth) |> 
+  add_ci() %>% 
+  add_p() |> 
+  modify_header(label ~ "**Characteristic**") |>
+  modify_caption("**Association between demographic characteristics and familiarity with digital health tools**") |>
+  bold_labels() |>
+  as_gt()
+  
+  
+  
 ```
 
 ## Table 10.
@@ -63,11 +249,91 @@ ppt_data <- import(here("data", "PPT_study.xlsx")) %>%
 ```{r}
 #| echo: false
 
+
+
+table10 <-ppt_data  |> 
+select(demo_v, receive_phinformation_phone)
+
+
+
+table10 %>%
+  tbl_summary(
+    by = receive_phinformation_phone) |> 
+  add_ci() %>% 
+  add_p() |> 
+  modify_header(label ~ "**Characteristic**") |>
+  modify_caption("**Association between demographic characteristics and receiving health information on phone**") |>
+  bold_labels() |>
+  as_gt()
+
+
 ```
+
+## table10.1
+
+```{r}
+#| echo: false
+
+
+table10.1 <-ppt_data  |>
+  select(demo_v, 
+   receive_via_healthworker, 
+    receive_via_tv, 
+    receive_via_community, 
+    receive_via_socialmedia, 
+    receive_via_sms, 
+    receive_via_faf ) %>% 
+  rename(
+   healthworker=receive_via_healthworker, 
+   tv_radio=receive_via_tv, 
+    community_meeting=receive_via_community, 
+    social_media=receive_via_socialmedia, 
+    sms_from_moh=receive_via_sms, 
+    freend_family=receive_via_faf ) |> 
+  pivot_longer(
+    cols=c(healthworker, tv_radio, community_meeting, social_media, sms_from_moh, freend_family),
+    names_to="source_info",
+    values_to="yes_no" ) |> 
+  filter(yes_no==1) |> 
+  select(-yes_no)
+  
+  
+
+
+
+
+
+table10.1 %>%  tbl_summary(
+    by = source_info) |>
+  add_ci() %>% 
+  add_p() |> 
+  modify_header(label ~ "**Characteristic**") |>
+  modify_caption("**Association between demographic characteristics and source of receiving health information on phone**") |>
+  bold_labels() |>
+  as_gt()
+  
+```
+
+
 
 ## Table 11.
 ```{r}
 #| echo: false
+
+table11 <-ppt_data |> 
+   select(demo_v, digital_report)
+
+
+
+table11 %>%  tbl_summary(
+    by = digital_report) |> 
+  add_ci() %>% 
+  add_p() |> 
+  modify_header(label ~ "**Characteristic**") |>
+  modify_caption("**Association between demographic characteristics and awareness of  campaigns promoting digital reporting during outbreaks**") |>
+  bold_labels() |>
+  as_gt()
+
 
 ```
 

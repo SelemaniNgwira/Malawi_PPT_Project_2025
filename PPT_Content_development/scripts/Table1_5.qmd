@@ -94,9 +94,15 @@ ppt_data <- ppt_data |>
        age >= 80 & age <= 84 ~ "80-84",
        age >= 85             ~ "85+",
        TRUE                  ~ "Unknown"
-    ))
+    ), 
+    
+  age_group2=case_when(
+    age >=18 & age <=39 ~ "18-39",
+    age >=40 & age <=59 ~ "40-59",
+    age >=60            ~ "60+",
+    TRUE                ~ "Unknown"   )) 
   
-demo_v<-c("gender", "age_group", "edu", "locat", "district")
+demo_v<-c("gender", "age_group2", "edu", "locat", "district")
 
 
 
@@ -509,14 +515,16 @@ table5 <-ppt_data%>%
 
 table5 %>% 
   tbl_summary(
-    by=electronic_have, 
-    percent = "row"
-  ) %>% 
+    by=electronic_have) %>% 
   add_ci() %>% 
-  add_p()
+  add_p() |> 
+  modify_header(label ~ "**Characteristic**") |>
+  modify_caption("**Association between demographic characteristics and ownership of phone**") |>
+  bold_labels() |>
+  as_gt()
 
 
-  
+
 
 
 ```
