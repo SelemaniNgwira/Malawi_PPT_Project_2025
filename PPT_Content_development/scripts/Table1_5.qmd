@@ -1,4 +1,21 @@
-(--- title: "ppt_study_analysis Table1_5" format: html ---
+
+---
+title: "Table6_11"
+format: 
+  docx:
+    reference-doc: custom-reference.docx
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    df-print: default
+    tbl-cap-location: top
+    tbl-colwidths: auto
+    tbl-style: Table Grid
+fontsize: 12pt
+mainfont: "Times New Roman"
+---
+
+
 
 ```{r}
 #| echo: false

@@ -1,0 +1,250 @@
+---
+title: "regression_tables"
+format: docx
+---
+
+```{r}
+#| echo: false
+
+library(tidyverse)
+library(lubridate)
+library(readxl)
+library(janitor)
+library(gt)
+library(rio)
+library(here)
+library(gtsummary)
+library(pacman)
+p_load(cleanepi, cowplot, cardx)
+
+# loading data 
+
+ppt_data <- import(here("data", "PPT_study.xlsx")) %>%
+  clean_names()
+
+# # converting character variables to factors and convert them to lower cases. 
+ppt_data <- ppt_data |>
+  mutate(across(where(is.character), str_to_lower)) |>
+  mutate(across(where(is.character), ~ str_replace_all(.x, "_", " "))) |>
+  mutate(across(where(is.character), as.factor)) %>%
+  mutate(familiar_digitalhealth=recode(
+      familiar_digitalhealth,
+      "heard of but never used"="not familiar"),
+      
+      believe_report_ill=recode(
+      believe_report_ill,
+      "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree"),
+      
+      comfort_report=recode(
+      comfort_report,
+      "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree", 
+      "neutral  osakhala mbali iliyonse"= "neutral"),
+      
+      use_digitalsystem=recode(
+      use_digitalsystem,
+      "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree" 
+      
+      ),
+      
+      
+      digital_safe=recode(
+      digital_safe,
+     "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree", 
+      "neutral  osakhala mbali iliyonse"= "neutral"),
+      
+      join_program=recode(
+      join_program,
+      "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree", 
+      "neutral  osakhala mbali iliyonse"= "neutral", 
+       "strongly disagree  sindikugwirizana nazo"="strongly disagree"),
+      
+      
+      digital_detect=recode(
+      digital_detect,
+       "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree"),
+      
+      accept_digitaltool=recode(
+      accept_digitaltool,
+      "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree", 
+      "neutral  osakhala mbali iliyonse"= "neutral", 
+      "strongly disagree  sindikugwirizana nazo"="strongly disagree"
+        ), 
+     rece_repo_alert=recode(
+       rece_repo_alert, 
+       "in person"="in-person"
+     )) %>%
+  mutate(
+    age_group = case_when(
+       age >= 18 & age <= 24 ~ "18-24",
+       age >= 25 & age <= 29 ~ "25-29",
+       age >= 30 & age <= 34 ~ "30-34",
+       age >= 35 & age <= 39 ~ "35-39",
+       age >= 40 & age <= 44 ~ "40-44",
+       age >= 45 & age <= 49 ~ "45-49",
+       age >= 50 & age <= 54 ~ "50-54",
+       age >= 55 & age <= 59 ~ "55-59",
+       age >= 60 & age <= 64 ~ "60-64",
+       age >= 65 & age <= 69 ~ "65-69",
+       age >= 70 & age <= 74 ~ "70-74",
+       age >= 75 & age <= 79 ~ "75-79",
+       age >= 80 & age <= 84 ~ "80-84",
+       age >= 85             ~ "85+",
+       TRUE                  ~ "Unknown"
+    ), 
+    
+  age_group2=case_when(
+    age >=18 & age <=39 ~ "18-39",
+    age >=40 & age <=59 ~ "40-59",
+    age >=60            ~ "60+",
+    TRUE                ~ "Unknown"   )) 
+  
+demo_v<-c("gender", "age_group2", "edu", "locat", "district")
+
+
+model_v<-c("gender", "age_group2", "edu", "locat", "district", "internet_have", "electronic_have")
+
+```
+
+
+Awareness of the digital health surveillance platform. 
+A cumulative median score of >=3 will indicate a high awareness score of digital health surveillance.  
+
+
+```{r}
+#| echo: false
+
+    model_data<- ppt_data|> 
+          mutate(
+            aware_score = rowSums(across(c(familiar_digitalhealth,
+                                            digital_report, 
+                                            report_ill,
+                                            receive_phinformation_phone), 
+                                         ~ as.numeric(recode(.x, 
+                                                             "not familiar"=0, 
+                                                             "very familiar"=1, 
+                                                             "somewhat familiar"=1,
+                                                             "no"=0,  
+                                                             "yes"=1   ))), na.rm=TRUE),
+            high_aware = if_else(aware_score >= 2, "high awareness", "low awareness")  ) |> 
+       mutate(attitudes_score = rowSums(across(c(believe_report_ill, 
+                                                  comfort_report,
+                                                  use_digitalsystem, 
+                                                  digital_safe, 
+                                                  join_program, 
+                                                  digital_detect, 
+                                                  accept_digitaltool), 
+                                         ~ as.numeric(recode(.x, 
+                                                             "agree"=1, 
+                                                             "strongly agree"=1, 
+                                                             "strongly disagree"=0,
+                                                             "neutral"=0,  
+                                                             "disagree"=0   ))), na.rm=TRUE),
+            attitude_level = if_else(attitudes_score >= 4, "good attitude ", " poor attitude")  ) |> 
+   mutate(practice_score  = rowSums(across(c(     
+                                                  rece_repo_healthinfo, 
+                                                  rece_repo_alert,
+                                                  digital_workwell, 
+                                                  reported_12month, 
+                                                  frequency_to_access), 
+                                         ~ as.numeric(recode(.x, 
+                                                             "no"=0, 
+                                                             "yes"=1, 
+                                                             "sms"=1,
+                                                             "phone call"=1,  
+                                                             "in-person"=0, 
+                                                        "mobile app"=1,
+                                                             "community health worker"=0,  
+                                                             "monthly"=1,
+                                                             "weekly"=1,
+                                                             "rarely"=0,
+                                                             "never"=0,                                                              ))), na.rm=TRUE),
+            practices_level = if_else(practice_score >= 3, "high practice ", "low practice")  ) |>
+             mutate(
+               Acceptance_score= rowSums(across(  c( aware_score,attitudes_score, practice_score), 
+                                         ~ as.numeric(.x)), na.rm=TRUE),
+              Acceptance_level = case_when(
+              Acceptance_score >=8 ~ "high acceptance",
+              Acceptance_score <8 ~ "low acceptance",
+              TRUE ~ "Unknown" )) |> 
+           mutate(Acceptance_level2 = recode(Acceptance_level, 
+                     "low acceptance"=0,
+                      "high acceptance"=1 ))
+       
+
+
+
+
+
+
+
+```
+
+## logistic regression tables
+
+
+
+```{r}
+#| echo: false
+
+model1 <- model_data |> 
+  select(any_of(model_v), Acceptance_level2)
+
+
+fit_1<- model1 |>
+tbl_uvregression(
+  method = glm,
+  y = Acceptance_level2,
+  exponentiate = TRUE,
+  pvalue_fun = ~style_pvalue(.x, digits = 3),
+  conf.level = 0.95
+) %>%
+  bold_p() %>%              # bold significant p-values
+  italicize_levels() %>%    # italicize factor levels
+  add_global_p() %>%        # global p-values for categorical predictors
+  modify_header(label ~ "**Predictors**") %>%
+  modify_caption("**Crude Odds ratios for acceptance level**")
+
+
+fit_glm <- glm(data = model1, Acceptance_level2~gender+
+                                      age_group2+
+                                      edu+
+                                      locat+
+                                      district+
+                                      internet_have+
+                                      electronic_have, 
+                               family = binomial)
+
+
+
+
+
+fit_2<- mode2<- tbl_regression(
+  fit_glm,
+  exponentiate = TRUE) %>%
+  bold_p() %>%              # bold significant p-values
+  italicize_levels() %>%    # italicize factor levels
+  add_global_p() %>%        # global p-values for categorical predictors
+  modify_header(label ~ "**Predictors**") %>%
+  modify_caption("**adjust Odds ratios for acceptance level**")
+
+
+tbl_merge(
+  tbls = list(fit_1, fit_2),
+  tab_spanner = c("**Crude OR (95% CI)**", "**Adjusted OR (95% CI)**")) %>%
+  modify_caption("**Table: Odds Ratios for Acceptance of Digital Health Surveillance**") %>%
+  italicize_levels()
+
+
+
+
+
+
+```
+
