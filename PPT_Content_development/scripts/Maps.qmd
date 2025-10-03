@@ -1,0 +1,299 @@
+---
+title: "Maps"
+format: html
+---
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(readxl)
+library(janitor)
+library(gt)
+library(rio)
+library(here)
+library(gtsummary)
+library(pacman)
+p_load(cleanepi, cowplot, cardx, sf, tmap, tmaptools, leaflet,ggspatial)
+# loading data
+ppt_data <- import(here("data", "PPT_study.xlsx")) %>%
+clean_names()
+# # converting character variables to factors and convert them to lower cases.
+ppt_data <- ppt_data |>
+mutate(across(where(is.character), str_to_lower)) |>
+mutate(across(where(is.character), ~ str_replace_all(.x, "_", " "))) |>
+mutate(across(where(is.character), as.factor)) %>%
+mutate(familiar_digitalhealth=recode(
+familiar_digitalhealth,
+"heard of but never used"="not familiar"),
+believe_report_ill=recode(
+believe_report_ill,
+"strongly agree  ndikugwirizana nazo kwam"="strongly agree",
+"agree  ndikugwirizana nazo"="agree"),
+comfort_report=recode(
+comfort_report,
+"strongly agree  ndikugwirizana nazo kwam"="strongly agree",
+"agree  ndikugwirizana nazo"="agree",
+"neutral  osakhala mbali iliyonse"= "neutral"),
+use_digitalsystem=recode(
+use_digitalsystem,
+"strongly agree  ndikugwirizana nazo kwam"="strongly agree",
+"agree  ndikugwirizana nazo"="agree"
+),
+digital_safe=recode(
+digital_safe,
+"strongly agree  ndikugwirizana nazo kwam"="strongly agree",
+"agree  ndikugwirizana nazo"="agree",
+"neutral  osakhala mbali iliyonse"= "neutral"),
+join_program=recode(
+join_program,
+"strongly agree  ndikugwirizana nazo kwam"="strongly agree",
+"agree  ndikugwirizana nazo"="agree",
+"neutral  osakhala mbali iliyonse"= "neutral",
+"strongly disagree  sindikugwirizana nazo"="strongly disagree"),
+digital_detect=recode(
+digital_detect,
+"strongly agree  ndikugwirizana nazo kwam"="strongly agree",
+"agree  ndikugwirizana nazo"="agree"),
+accept_digitaltool=recode(
+accept_digitaltool,
+"strongly agree  ndikugwirizana nazo kwam"="strongly agree",
+"agree  ndikugwirizana nazo"="agree",
+"neutral  osakhala mbali iliyonse"= "neutral",
+"strongly disagree  sindikugwirizana nazo"="strongly disagree"
+),
+rece_repo_alert=recode(
+rece_repo_alert,
+"in person"="in-person"
+)) %>%
+mutate(
+age_group = case_when(
+age >= 18 & age <= 24 ~ "18-24",
+age >= 25 & age <= 29 ~ "25-29",
+age >= 30 & age <= 34 ~ "30-34",
+age >= 35 & age <= 39 ~ "35-39",
+age >= 40 & age <= 44 ~ "40-44",
+age >= 45 & age <= 49 ~ "45-49",
+age >= 50 & age <= 54 ~ "50-54",
+age >= 55 & age <= 59 ~ "55-59",
+age >= 60 & age <= 64 ~ "60-64",
+age >= 65 & age <= 69 ~ "65-69",
+age >= 70 & age <= 74 ~ "70-74",
+age >= 75 & age <= 79 ~ "75-79",
+age >= 80 & age <= 84 ~ "80-84",
+age >= 85             ~ "85+",
+TRUE                  ~ "Unknown"
+),
+age_group2=case_when(
+age >=18 & age <=39 ~ "18-39",
+age >=40 & age <=59 ~ "40-59",
+age >=60            ~ "60+",
+TRUE                ~ "Unknown"   ))
+demo_v<-c("gender", "age_group2", "edu", "locat", "district")
+
+
+```
+
+
+```{r}
+# loading shapefile for malawi districts
+
+lake_malawi <- st_read(here("data", "Lake_Malawi_Nyasa.shp")) %>%
+st_transform(crs = 4326) |>
+clean_names() |>
+select(name)
+
+# loading shapefile for malawi districts
+malawi_districts <- st_read(here("data", "Admin2.shp")) %>%
+st_transform(crs = 4326) |>
+clean_names() |>
+select(district) |> 
+  mutate(district = str_to_lower(district))
+
+
+
+
+
+map_data <- ppt_data %>%
+select(district, electronic_have, internet_have,know_digital_health_surve, report_ill, rece_repo_healthinfo) |>
+mutate(district= recode(district,
+"mzimba south"="mzimba"))
+
+
+
+```
+
+Owenship of phone by district 
+
+```{r}
+
+map1<- map_data %>%
+    group_by(district) %>%
+    count(electronic_have) %>%
+    pivot_wider(names_from = electronic_have, values_from = n) %>%
+    mutate(total = yes + no,
+    perc_electronic = round((yes / total) * 100, 1)) |>
+    select(district, perc_electronic) |>
+    right_join(malawi_districts, by = "district") %>%
+    mutate(label_text = paste(district, perc_electronic)) |>
+    st_as_sf() |>
+    ggplot() +
+    geom_sf(aes(fill = perc_electronic)) +
+    # scale_fill_viridis_c(option = "plasma", na.value = "white") +
+    theme_minimal() +
+    labs(title = "Percentage of Ownership of phone by District",
+         fill = "Percentage(%)", 
+         x = "Longitude",
+         y = "Latitude")+
+    geom_sf_text(aes(label =str_wrap(label_text,10)),size =3.8)+
+    scale_fill_continuous(low ="red",high ="green", na.value = "white") +
+    ggspatial::annotation_north_arrow(location = "br")+
+    ggspatial::annotation_scale(location = "tr")
+
+
+
+ggsave(here("output","map1.png"),map1, width = 10, height = 16, units = "in", dpi = 600)
+
+
+
+```
+
+
+Ownership of smart phone by district
+
+```{r}
+
+map2<- map_data %>%
+    group_by(district) %>%
+    count(internet_have) %>%
+    pivot_wider(names_from = internet_have, values_from = n) %>%
+    mutate(total = yes + no,
+    perc_electronic = round((yes / total) * 100, 1)) |>
+    select(district, perc_electronic) |>
+    right_join(malawi_districts, by = "district") %>%
+    mutate(label_text = paste(district, perc_electronic)) |>
+    st_as_sf() |>
+    ggplot() +
+    geom_sf(aes(fill = perc_electronic)) +
+    theme_minimal() +
+    labs(title = "Percentage of smart phone ownership by district",
+         fill = "Percentage(%)", 
+         x = "Longitude",
+         y = "Latitude")+
+    geom_sf_text(aes(label =str_wrap(label_text,10)),size =3.8)+
+    scale_fill_continuous(low ="red",high ="green", na.value = "white") +
+    ggspatial::annotation_north_arrow(location = "br")+
+    ggspatial::annotation_scale(location = "tr")
+
+
+
+ggsave(here("output","map2.png"),map2, width = 10, height = 16, units = "in", dpi = 600)
+
+
+```
+
+Knowledge of digital health surveillance by district
+
+
+```{r}
+
+
+
+map3<- map_data %>%
+    group_by(district) %>%
+    count(know_digital_health_surve) %>%
+    pivot_wider(names_from = know_digital_health_surve, values_from = n) %>%
+    mutate(total = yes + no,
+    perc_electronic = round((yes / total) * 100, 1)) |>
+    select(district, perc_electronic) |>
+    right_join(malawi_districts, by = "district") %>%
+    mutate(label_text = paste(district, perc_electronic)) |>
+    st_as_sf() |>
+    ggplot() +
+    geom_sf(aes(fill = perc_electronic)) +
+    theme_minimal() +
+    labs(title = "Awareness of digital health surveillance by district",
+         fill = "Percentage(%)", 
+         x = "Longitude",
+         y = "Latitude")+
+    geom_sf_text(aes(label =str_wrap(label_text,10)),size =3.8)+
+    scale_fill_continuous(low ="red",high ="green", na.value = "white") +
+    ggspatial::annotation_north_arrow(location = "br")+
+    ggspatial::annotation_scale(location = "tr")
+
+
+
+ggsave(here("output","map3.png"),map3, width = 10, height = 16, units = "in", dpi = 600)
+
+```
+
+
+ Have you ever used a mobile phone or app to receive or report health information?  
+ 
+ 
+```{r}
+
+map4<- map_data %>%
+    group_by(district) %>%
+    count(rece_repo_healthinfo) %>%
+    pivot_wider(names_from = rece_repo_healthinfo, values_from = n) %>%
+    mutate(total = yes + no,
+    perc_electronic = round((yes / total) * 100, 1)) |>
+    select(district, perc_electronic) |>
+    right_join(malawi_districts, by = "district") %>%
+    mutate(label_text = paste(district, perc_electronic)) |>
+    st_as_sf() |>
+    ggplot() +
+    geom_sf(aes(fill = perc_electronic)) +
+    theme_minimal() +
+    labs(title = "Use of mobile phone or app to receive or report health information by district",
+         fill = "Percentage(%)", 
+         x = "Longitude",
+         y = "Latitude")+
+    geom_sf_text(aes(label =str_wrap(label_text,10)),size =3.8)+
+    scale_fill_continuous(low ="red",high ="green", na.value = "white") +
+    ggspatial::annotation_north_arrow(location = "br")+
+    ggspatial::annotation_scale(location = "tr")
+
+
+
+ggsave(here("output","map4.png"),map4, width = 10, height = 16, units = "in", dpi = 600)
+
+```
+ 
+
+ Have u ever used any electronic gauges (phones, tablets, computers) to report any illness before?
+ 
+ 
+```{r}
+
+
+map5<- map_data %>%
+    group_by(district) %>%
+    count(report_ill) %>%
+    pivot_wider(names_from = report_ill, values_from = n) %>%
+    mutate(total = yes + no,
+    perc_electronic = round((yes / total) * 100, 1)) |>
+    select(district, perc_electronic) |>
+    right_join(malawi_districts, by = "district") %>%
+    mutate(label_text = paste(district, perc_electronic)) |>
+    st_as_sf() |>
+    ggplot() +
+    geom_sf(aes(fill = perc_electronic)) +
+    theme_minimal() +
+    labs(title = "Belief that using phones to report illnesses can improve healthcare in your community by district",
+         fill = "Percentage(%)", 
+         x = "Longitude",
+         y = "Latitude")+
+    geom_sf_text(aes(label =str_wrap(label_text,10)),size =3.8)+
+    scale_fill_continuous(low ="red",high ="green", na.value = "white") +
+    ggspatial::annotation_north_arrow(location = "br")+
+    ggspatial::annotation_scale(location = "tr")
+
+
+ggsave(here("output","map5.png"),map5, width = 10, height = 16, units = "in", dpi = 600)
+
+
+
+```
+ 
+ 
