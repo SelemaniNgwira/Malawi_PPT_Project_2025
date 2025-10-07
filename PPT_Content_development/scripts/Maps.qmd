@@ -110,9 +110,7 @@ select(district) |>
   mutate(district = str_to_lower(district))
 
 
-
-
-
+# preparing data for maps
 map_data <- ppt_data %>%
 select(district, electronic_have, internet_have,know_digital_health_surve, report_ill, rece_repo_healthinfo) |>
 mutate(district= recode(district,
@@ -292,6 +290,37 @@ map5<- map_data %>%
 
 ggsave(here("output","map5.png"),map5, width = 10, height = 16, units = "in", dpi = 600)
 
+
+
+```
+ 
+ 
+ study sites 
+ 
+ 
+```{r}
+
+
+map6 <- map_data %>%
+    group_by(district) %>%
+    summarise(total = n()) %>%
+    right_join(malawi_districts, by = "district") |> 
+    mutate(study_site = ifelse(is.na(total), "No", "Yes")) |> 
+    mutate(label_text = paste(district, total)) |>
+    st_as_sf() |>
+    ggplot() +
+    geom_sf(aes(fill = study_site)) +
+    theme_minimal() +
+    labs(title = "Distribution of sample size by study sites",
+         fill = "Study Site", 
+         x = "Longitude",
+         y = "Latitude")+
+    geom_sf_text(aes(label =str_wrap(label_text,10)),size =3.8)+
+    # scale_fill_continuous(low ="red",high ="green", na.value = "white") +
+    ggspatial::annotation_north_arrow(location = "br")+
+    ggspatial::annotation_scale(location = "tr")
+
+ggsave(here("output","map6.png"),map6, width = 10, height = 16, units = "in", dpi = 600)
 
 
 ```

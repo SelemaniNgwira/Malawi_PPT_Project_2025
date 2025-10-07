@@ -132,7 +132,17 @@ demo_v<-c("gender", "age_group2", "edu", "locat", "district")
 #| echo: false
 
 ppt_data |> 
-  select(gender, age, edu, locat, district, electronic_have, internet_have) |>
+  select(gender, age, edu, locat, district, electronic_have, internet_have, 
+         know_digital_health_surve, 
+        report_ill, 
+        familiar_digitalhealth,# change the value of " heard of nut never used" to "not familiar"
+        receive_phinformation_phone, 
+        digital_report, 
+        rece_repo_healthinfo, 
+        rece_repo_alert,
+        digital_workwell, 
+        reported_12month, 
+        frequency_to_access) |>
   mutate(electronic_have = as.factor(electronic_have)) |> 
   tbl_summary(
     
@@ -143,7 +153,17 @@ ppt_data |>
       locat ~ "Location",
       district ~ "District", 
       electronic_have~ " Owenship of phone", 
-      internet_have~ " Owenship of smart phone"
+      internet_have~ " Owenship of smart phone", 
+       know_digital_health_surve ~"Aware of Digital Health Surveillance", 
+     report_ill~"Reported illness before using electronic gauges", 
+     familiar_digitalhealth ~ "Familiar with Digital health Tools",
+     receive_phinformation_phone~ "Received health information via Phone", 
+     digital_report~ "Seen or Heard Campaigns promoting Digital Reporting", 
+     rece_repo_healthinfo ~"Use a Mobile phone or App to receive or report health information", 
+     rece_repo_alert~"Prefered methods for reporting symptoms or receiving alerts", 
+     digital_workwell ~ "Community thinks digital health surveillance works well",
+     reported_12month~ "In last 12 Month, reported health related information using phone or digital tool", 
+     frequency_to_access~ "Frequncy of using phone to access health service or information"
     ),
     type = list( all_dichotomous()~ "categorical"),
     statistic = list(
@@ -153,6 +173,8 @@ ppt_data |>
     ),
     digits = all_continuous() ~ 2
   )
+
+
 
 
 ```
@@ -238,6 +260,11 @@ graph1<- graph1 %>%
   )+
   coord_flip()
 
+
+
+
+
+
 # preparing data set for plot 2 
 
 graph2 <- ppt_data %>% 
@@ -295,7 +322,6 @@ ggsave(
   height = 6,
   units = "in"
 )
-
 
 
 

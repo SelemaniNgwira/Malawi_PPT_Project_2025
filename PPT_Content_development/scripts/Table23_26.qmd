@@ -17,12 +17,98 @@ library(rio)
 library(here)
 library(gtsummary)
 library(pacman)
-p_load(cleanepi)
+p_load(cleanepi, cowplot, cardx)
 
 # loading data 
 
 ppt_data <- import(here("data", "PPT_study.xlsx")) %>%
   clean_names()
+
+# # converting character variables to factors and convert them to lower cases. 
+ppt_data <- ppt_data |>
+  mutate(across(where(is.character), str_to_lower)) |>
+  mutate(across(where(is.character), str_to_title)) |>
+  mutate(across(where(is.character), ~ str_replace_all(.x, "_", " "))) |>
+  mutate(across(where(is.character), as.factor)) %>%
+  mutate(familiar_digitalhealth=recode(
+      familiar_digitalhealth,
+      "heard of but never used"="not familiar"),
+      
+      believe_report_ill=recode(
+      believe_report_ill,
+      "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree"),
+      
+      comfort_report=recode(
+      comfort_report,
+      "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree", 
+      "neutral  osakhala mbali iliyonse"= "neutral"),
+      
+      use_digitalsystem=recode(
+      use_digitalsystem,
+      "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree" 
+      
+      ),
+      
+      
+      digital_safe=recode(
+      digital_safe,
+     "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree", 
+      "neutral  osakhala mbali iliyonse"= "neutral"),
+      
+      join_program=recode(
+      join_program,
+      "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree", 
+      "neutral  osakhala mbali iliyonse"= "neutral", 
+       "strongly disagree  sindikugwirizana nazo"="strongly disagree"),
+      
+      
+      digital_detect=recode(
+      digital_detect,
+       "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree"),
+      
+      accept_digitaltool=recode(
+      accept_digitaltool,
+      "strongly agree  ndikugwirizana nazo kwam"="strongly agree", 
+      "agree  ndikugwirizana nazo"="agree", 
+      "neutral  osakhala mbali iliyonse"= "neutral", 
+      "strongly disagree  sindikugwirizana nazo"="strongly disagree"
+        ), 
+     rece_repo_alert=recode(
+       rece_repo_alert, 
+       "in person"="in-person"
+     )) %>%
+  mutate(
+    age_group = case_when(
+       age >= 18 & age <= 24 ~ "18-24",
+       age >= 25 & age <= 29 ~ "25-29",
+       age >= 30 & age <= 34 ~ "30-34",
+       age >= 35 & age <= 39 ~ "35-39",
+       age >= 40 & age <= 44 ~ "40-44",
+       age >= 45 & age <= 49 ~ "45-49",
+       age >= 50 & age <= 54 ~ "50-54",
+       age >= 55 & age <= 59 ~ "55-59",
+       age >= 60 & age <= 64 ~ "60-64",
+       age >= 65 & age <= 69 ~ "65-69",
+       age >= 70 & age <= 74 ~ "70-74",
+       age >= 75 & age <= 79 ~ "75-79",
+       age >= 80 & age <= 84 ~ "80-84",
+       age >= 85             ~ "85+",
+       TRUE                  ~ "Unknown"
+    ), 
+    
+  age_group2=case_when(
+    age >=18 & age <=39 ~ "18-39",
+    age >=40 & age <=59 ~ "40-59",
+    age >=60            ~ "60+",
+    TRUE                ~ "Unknown"   )) 
+  
+demo_v<-c("gender", "age_group2", "edu", "locat", "district")
 
 ```
 
@@ -35,12 +121,109 @@ ppt_data <- import(here("data", "PPT_study.xlsx")) %>%
 ```{r}
 #| echo: false
 
+ ppt_data %>%
+  select(all_of(demo_v), digital_workwell) %>%
+  filter(!is.na(digital_workwell)) %>%
+  tbl_summary(by = digital_workwell,
+              missing = "no", 
+              label = list( gender~ "Gender",
+                           age_group2~ "Age group",
+                           edu~ "Education level",
+                           locat~ "Location",
+                           district~ "District"), 
+              
+       statistic = list(
+          all_categorical() ~ "{n} ({p})",    # default
+          all_continuous() ~ "{mean} ± {sd}" ) 
+       )%>%
+  modify_header(label = "**Variable**") %>%
+  modify_spanning_header(
+    all_stat_cols() ~ "**Digital health Surveillance work well in community**"
+  ) %>%
+   add_ci() %>%
+   add_p() %>%
+  modify_fmt_fun(
+    statistic = label_style_percent(symbol = FALSE),
+    ci = label_style_percent(symbol = FALSE)) %>%
+  as_flex_table()
+
+
 ```
+
+
+
+
+## Table 26.
+
+```{r}
+#| echo: false
+
+
+ ppt_data %>%
+  select(all_of(demo_v), reported_12month) %>%
+  filter(!is.na(reported_12month)) %>%
+  tbl_summary(by = reported_12month,
+              missing = "no", 
+              label = list( gender~ "Gender",
+                           age_group2~ "Age group",
+                           edu~ "Education level",
+                           locat~ "Location",
+                           district~ "District"), 
+              
+       statistic = list(
+          all_categorical() ~ "{n} ({p})",    # default
+          all_continuous() ~ "{mean} ± {sd}" ) 
+       )%>%
+  modify_header(label = "**Variable**") %>%
+  # modify_spanning_header(
+  #   all_stat_cols() ~ "**in last 12 month reported any health information using phone or digital tool**"
+  # ) %>%
+  modify_caption("**In last 12 month reported any health information using phone or digital tool**") %>%
+   add_ci() %>%
+   add_p() %>%
+  modify_fmt_fun(
+    statistic = label_style_percent(symbol = FALSE),
+    ci = label_style_percent(symbol = FALSE)) %>%
+  as_flex_table()
+
+
+```
+
+
+
 
 ## Table 24.
 
 ```{r}
 #| echo: false
+
+ ppt_data %>%
+  select(all_of(demo_v), frequency_to_access ) %>%
+  filter(!is.na(frequency_to_access)) %>%
+  tbl_summary(by =frequency_to_access,
+              missing = "no", 
+              label = list( gender~ "Gender",
+                           age_group2~ "Age group",
+                           edu~ "Education level",
+                           locat~ "Location",
+                           district~ "District"), 
+              
+       statistic = list(
+          all_categorical() ~ "{n} ({p})",    # default
+          all_continuous() ~ "{mean} ± {sd}" ))%>%
+  modify_header(label = "**Variable**") %>%
+  # modify_spanning_header(
+  #   all_stat_cols() ~ "**in last 12 month reported any health information using phone or digital tool**"
+  # ) %>%
+  modify_caption("**Frequency on access towards digital health surveillance**") %>%
+   add_ci() %>%
+   add_p() %>%
+  modify_fmt_fun(
+    statistic = label_style_percent(symbol = FALSE),
+    ci = label_style_percent(symbol = FALSE)) %>%
+  as_flex_table()
+  
+
 
 ```
 
@@ -49,12 +232,37 @@ ppt_data <- import(here("data", "PPT_study.xlsx")) %>%
 ```{r}
 #| echo: false
 
+
+ ppt_data %>%
+  select(all_of(demo_v), use_digitalsystem) %>%
+  filter(!is.na(use_digitalsystem)) %>%
+  tbl_summary(by = use_digitalsystem, missing = "no") %>%
+  modify_header(label = "**Variable**") %>%
+  modify_spanning_header(
+    all_stat_cols() ~ "**Acceptance of using a digital system approved by Ministry of Health**"
+  ) %>%
+  as_flex_table()
+
+
+
 ```
 
 ## Table 26.
 
 ```{r}
 #| echo: false
+
+
+ ppt_data %>%
+  select(all_of(demo_v), digital_safe) %>%
+  filter(!is.na(digital_safe)) %>%
+  tbl_summary(by = digital_safe, missing = "no") %>%
+  modify_header(label = "**Variable**") %>%
+  modify_spanning_header(
+    all_stat_cols() ~ "**Belief that personal health data is safe via digital tools**"
+  ) %>%
+  as_flex_table()
+
 
 
 ```

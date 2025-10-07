@@ -7,7 +7,6 @@ format: html
 
 ```{r}
 #| echo: false
-
 library(tidyverse)
 library(lubridate)
 library(readxl)
@@ -17,12 +16,86 @@ library(rio)
 library(here)
 library(gtsummary)
 library(pacman)
-p_load(cleanepi)
-
-# loading data 
-
+p_load(cleanepi, cowplot, cardx, sf, tmap, tmaptools, leaflet,ggspatial)
+# loading data
 ppt_data <- import(here("data", "PPT_study.xlsx")) %>%
-  clean_names()
+clean_names()
+# # converting character variables to factors and convert them to lower cases.
+ppt_data <- ppt_data |>
+mutate(across(where(is.character), str_to_lower)) |>
+mutate(across(where(is.character), ~ str_replace_all(.x, "_", " "))) |>
+mutate(across(where(is.character), as.factor)) %>%
+mutate(familiar_digitalhealth=recode(
+familiar_digitalhealth,
+"heard of but never used"="not familiar"),
+believe_report_ill=recode(
+believe_report_ill,
+"strongly agree  ndikugwirizana nazo kwam"="strongly agree",
+"agree  ndikugwirizana nazo"="agree"),
+comfort_report=recode(
+comfort_report,
+"strongly agree  ndikugwirizana nazo kwam"="strongly agree",
+"agree  ndikugwirizana nazo"="agree",
+"neutral  osakhala mbali iliyonse"= "neutral"),
+use_digitalsystem=recode(
+use_digitalsystem,
+"strongly agree  ndikugwirizana nazo kwam"="strongly agree",
+"agree  ndikugwirizana nazo"="agree"
+),
+digital_safe=recode(
+digital_safe,
+"strongly agree  ndikugwirizana nazo kwam"="strongly agree",
+"agree  ndikugwirizana nazo"="agree",
+"neutral  osakhala mbali iliyonse"= "neutral"),
+join_program=recode(
+join_program,
+"strongly agree  ndikugwirizana nazo kwam"="strongly agree",
+"agree  ndikugwirizana nazo"="agree",
+"neutral  osakhala mbali iliyonse"= "neutral",
+"strongly disagree  sindikugwirizana nazo"="strongly disagree"),
+digital_detect=recode(
+digital_detect,
+"strongly agree  ndikugwirizana nazo kwam"="strongly agree",
+"agree  ndikugwirizana nazo"="agree"),
+accept_digitaltool=recode(
+accept_digitaltool,
+"strongly agree  ndikugwirizana nazo kwam"="strongly agree",
+"agree  ndikugwirizana nazo"="agree",
+"neutral  osakhala mbali iliyonse"= "neutral",
+"strongly disagree  sindikugwirizana nazo"="strongly disagree"
+),
+rece_repo_alert=recode(
+rece_repo_alert,
+"in person"="in-person"
+)) %>%
+mutate(
+age_group = case_when(
+age >= 18 & age <= 24 ~ "18-24",
+age >= 25 & age <= 29 ~ "25-29",
+age >= 30 & age <= 34 ~ "30-34",
+age >= 35 & age <= 39 ~ "35-39",
+age >= 40 & age <= 44 ~ "40-44",
+age >= 45 & age <= 49 ~ "45-49",
+age >= 50 & age <= 54 ~ "50-54",
+age >= 55 & age <= 59 ~ "55-59",
+age >= 60 & age <= 64 ~ "60-64",
+age >= 65 & age <= 69 ~ "65-69",
+age >= 70 & age <= 74 ~ "70-74",
+age >= 75 & age <= 79 ~ "75-79",
+age >= 80 & age <= 84 ~ "80-84",
+age >= 85             ~ "85+",
+TRUE                  ~ "Unknown"
+),
+age_group2=case_when(
+age >=18 & age <=39 ~ "18-39",
+age >=40 & age <=59 ~ "40-59",
+age >=60            ~ "60+",
+TRUE                ~ "Unknown"   ))
+demo_v<-c("gender", "age_group2", "edu", "locat", "district")
+
+
+
+
 
 ```
 
@@ -39,6 +112,10 @@ ppt_data <- import(here("data", "PPT_study.xlsx")) %>%
 
 ```{r}
 #| echo: false
+
+
+
+
 
 ```
 
@@ -59,6 +136,15 @@ ppt_data <- import(here("data", "PPT_study.xlsx")) %>%
 
 ```{r}
 #| echo: false
+
+ppt_data |>
+select(demo_v, join_program ) |> 
+  tbl_summary(
+    # percent = "row",
+    by = join_program) |> 
+  add_ci() |> 
+  add_p()
+
 
 ```
 
