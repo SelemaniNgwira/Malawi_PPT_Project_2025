@@ -1,9 +1,9 @@
 ---
 title: "Table23_26"
-format: html
+format: docx
 ---
 
-
+# loading data and cleaning 
 
 ```{r}
 #| echo: false
@@ -114,9 +114,45 @@ demo_v<-c("gender", "age_group2", "edu", "locat", "district")
 
 
 
+## Table 23 Receive or report health information using mobile phone or app
+
+```{r}
+#| echo: false
+
+
+ppt_data |> 
+       select(demo_v, rece_repo_healthinfo) |> 
+       tbl_summary(by = rece_repo_healthinfo,
+              missing = "no", 
+              label = list( gender~ "Gender",
+                           age_group2~ "Age group",
+                           edu~ "Education level",
+                           locat~ "Location",
+                           district~ "District"), 
+              
+       statistic = list(
+          all_categorical() ~ "{n} ({p})",    # default
+          all_continuous() ~ "{mean} ± {sd}" )  )%>%
+  modify_header(label = "**Variable**") %>%
+  modify_caption("**Receive or report health information using mobile phone or app**") %>%
+   add_ci() %>%
+   add_p() %>%
+  modify_fmt_fun(
+    statistic = label_style_percent(symbol = FALSE),
+    ci = label_style_percent(symbol = FALSE))
+
+
+```
+
+
+
+
+
+
+
+
 
 ## Table 23.
-
 
 ```{r}
 #| echo: false
@@ -144,11 +180,14 @@ demo_v<-c("gender", "age_group2", "edu", "locat", "district")
    add_p() %>%
   modify_fmt_fun(
     statistic = label_style_percent(symbol = FALSE),
-    ci = label_style_percent(symbol = FALSE)) %>%
-  as_flex_table()
+    ci = label_style_percent(symbol = FALSE))
 
 
 ```
+
+
+
+
 
 
 
@@ -183,8 +222,7 @@ demo_v<-c("gender", "age_group2", "edu", "locat", "district")
    add_p() %>%
   modify_fmt_fun(
     statistic = label_style_percent(symbol = FALSE),
-    ci = label_style_percent(symbol = FALSE)) %>%
-  as_flex_table()
+    ci = label_style_percent(symbol = FALSE)) 
 
 
 ```
@@ -220,8 +258,7 @@ demo_v<-c("gender", "age_group2", "edu", "locat", "district")
    add_p() %>%
   modify_fmt_fun(
     statistic = label_style_percent(symbol = FALSE),
-    ci = label_style_percent(symbol = FALSE)) %>%
-  as_flex_table()
+    ci = label_style_percent(symbol = FALSE))
   
 
 
@@ -234,15 +271,38 @@ demo_v<-c("gender", "age_group2", "edu", "locat", "district")
 
 
  ppt_data %>%
-  select(all_of(demo_v), use_digitalsystem) %>%
-  filter(!is.na(use_digitalsystem)) %>%
-  tbl_summary(by = use_digitalsystem, missing = "no") %>%
-  modify_header(label = "**Variable**") %>%
-  modify_spanning_header(
-    all_stat_cols() ~ "**Acceptance of using a digital system approved by Ministry of Health**"
+  select(all_of(demo_v), starts_with("motivate_healthsur_")) |> 
+   select(-motivate_healthsur_specify) |>
+   pivot_longer(
+     cols = starts_with("motivate_healthsur_"),
+     names_to = "motivation",
+     values_to = "response") |> 
+   filter(response==1) |> 
+   select(-response) |> 
+   mutate(motivation=recode(motivation, 
+                            "motivate_healthsur_result"="Knowing results",
+                            "motivate_healthsur_helpcom"="Helping community",
+                            "motivate_healthsur_trustmoh"="Trust in MoH",
+                            "motivate_healthsur_incentive"="Incentives",
+                            "motivate_healthsur_advice"="Receiving advice",
+                            "motivate_healthsur_easysystem"="Easy system",
+                            "motivate_healthsur_other"= "Other")) |> 
+   tbl_summary(
+     by = motivation,
+     missing = "no", 
+     
+     label= list(
+       gender~ "Sex", 
+       age_group2~ "Age Group", 
+       edu~"Education", 
+       locat~ "Location", 
+       district~"District"
+     )) |> 
+    modify_caption("**Motivation factors to participate in digital health surveillance**"
   ) %>%
-  as_flex_table()
-
+   add_ci() %>%
+   add_p() 
+ 
 
 
 ```
@@ -254,14 +314,35 @@ demo_v<-c("gender", "age_group2", "edu", "locat", "district")
 
 
  ppt_data %>%
-  select(all_of(demo_v), digital_safe) %>%
-  filter(!is.na(digital_safe)) %>%
-  tbl_summary(by = digital_safe, missing = "no") %>%
-  modify_header(label = "**Variable**") %>%
-  modify_spanning_header(
-    all_stat_cols() ~ "**Belief that personal health data is safe via digital tools**"
-  ) %>%
-  as_flex_table()
+  select(all_of(demo_v), starts_with("stop_healthsur_")) |> 
+   select(-c(stop_healthsur_specify_71, stop_healthsur_specify_72)) |> 
+   pivot_longer(
+     cols = starts_with("stop_healthsur_"),
+     names_to = "barrier",
+     values_to = "response") |> 
+   filter(response==1) |> 
+   select(-response) |> 
+   mutate(barrier=recode(barrier, 
+                         "stop_healthsur_poornet"= "Poor network",
+                         "stop_healthsur_nonelec" = "Not confident with phones",
+                         "stop_healthsur_nofeedback"= "No feedback", 
+                         "stop_healthsur_privacy"= "Privacy concerns",
+                         "stop_healthsur_other"= "Other")) |> 
+ tbl_summary(
+     by = barrier,
+     missing = "no", 
+     
+     label= list(
+       gender~ "Sex", 
+       age_group2~ "Age Group", 
+       edu~"Education", 
+       locat~ "Location", 
+       district~"District"
+     )) |> 
+    modify_caption("*Barriers to participate in digital health surveillance*") %>%
+   add_ci() %>%
+   add_p()
+ 
 
 
 
