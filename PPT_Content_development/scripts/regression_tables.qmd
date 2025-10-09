@@ -186,9 +186,43 @@ A cumulative median score of >=3 will indicate a high awareness score of digital
 
 ```
 
+
+# Acceptance of digital health surveillance platform.
+
+
+```{r}
+
+#| echo: false
+
+model_data |> 
+  select( demo_v, Acceptance_level) |> 
+  tbl_summary(by = Acceptance_level,
+              missing = "no", 
+              label = list( gender~ "Gender",
+                           age_group2~ "Age group",
+                           edu~ "Education level",
+                           locat~ "Location",
+                           district~ "District"), 
+              
+       statistic = list(
+          all_categorical() ~ "{n} ({p})",    # default
+          all_continuous() ~ "{mean} ± {sd}" )  )%>%
+  modify_header(label = "**Variable**") %>%
+  modify_caption("**Acceptance level of digital health tool**") %>%
+   add_ci() %>%
+   add_p() %>%
+  modify_fmt_fun(
+    statistic = label_style_percent(symbol = FALSE),
+    ci = label_style_percent(symbol = FALSE))
+
+```
+
+
+
+
+
+
 ## logistic regression tables
-
-
 
 ```{r}
 #| echo: false

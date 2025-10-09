@@ -27,7 +27,6 @@ ppt_data <- import(here("data", "PPT_study.xlsx")) %>%
 # # converting character variables to factors and convert them to lower cases. 
 ppt_data <- ppt_data |>
   mutate(across(where(is.character), str_to_lower)) |>
-  mutate(across(where(is.character), str_to_title)) |>
   mutate(across(where(is.character), ~ str_replace_all(.x, "_", " "))) |>
   mutate(across(where(is.character), as.factor)) %>%
   mutate(familiar_digitalhealth=recode(
@@ -106,7 +105,8 @@ ppt_data <- ppt_data |>
     age >=18 & age <=39 ~ "18-39",
     age >=40 & age <=59 ~ "40-59",
     age >=60            ~ "60+",
-    TRUE                ~ "Unknown"   )) 
+    TRUE                ~ "Unknown"   ))|> 
+  mutate(across(where(is.character), str_to_title))
   
 demo_v<-c("gender", "age_group2", "edu", "locat", "district")
 
@@ -144,6 +144,37 @@ ppt_data |>
 
 ```
 
+
+
+# prefered methods of reporting . 
+
+```{r}
+ppt_data |> 
+       select(demo_v, rece_repo_alert) |> 
+       filter(!is.na(rece_repo_alert)) %>%
+             tbl_summary(by = rece_repo_alert,
+              missing = "no", 
+              label = list( gender~ "Gender",
+                           age_group2~ "Age group",
+                           edu~ "Education level",
+                           locat~ "Location",
+                           district~ "District"), 
+              
+       statistic = list(
+          all_categorical() ~ "{n} ({p})",    # default
+          all_continuous() ~ "{mean} ± {sd}" )  )%>%
+  modify_header(label = "**Variable**") %>%
+  modify_caption("**Preferred Methods of Reporting health information**") %>%
+   add_ci() %>%
+   add_p() %>%
+  modify_fmt_fun(
+    statistic = label_style_percent(symbol = FALSE),
+    ci = label_style_percent(symbol = FALSE))
+
+
+
+
+```
 
 
 
