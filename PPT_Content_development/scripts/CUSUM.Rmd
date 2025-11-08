@@ -1,0 +1,345 @@
+---
+title: "CUSUM"
+output: html_document
+---
+
+```{r echo=FALSE, warning=FALSE}
+
+
+pacman::p_load(tidyverse, rio, qcc, janitor, here, zoo)
+
+
+# loading data set
+
+covid<- import(here("data", "covid.xlsx")) %>%
+  clean_names() # changing the names to lower case and snake case
+
+# change the date variable from character to date format,and select only date and daily cases columns
+covid<- covid |> 
+  mutate(date = as.Date(date, format = "%d/%m/%Y")) |> 
+  select(date, daily_cases)
+
+
+cholera<- import(here("data", "Daily_Cholera_Data.xlsx")) %>%
+  clean_names()
+
+
+
+sari<- import(here("data", "sari_data.xlsx")) %>%
+  clean_names()
+
+
+
+mpox<- import(here("data", "mpox_data.xlsx")) %>%
+  clean_names()
+
+```
+
+
+
+```{r echo=FALSE, warning=FALSE}
+
+# creating new variables using the daily counts of cases by calculating CUSUM values  and signals
+# Calculation are using the functions defined in CUSUM_help_fun.R
+cusum_covid<- covid |> 
+  mutate(c1_value =cusum_1(daily_cases), 
+         c2_value=cusum_1(daily_cases), 
+        c3_value=cusum_3(c2_value), 
+        c1_signal=signal(c1_value), 
+        c2_signal=signal(c2_value), 
+        c3_signal=signal_2(c3_value), 
+        c4_signal=signal_4(c1_signal, c3_signal), 
+        c5_signal=signal_4(c2_signal, c3_signal), 
+        c6_signal=signal_6(c2_signal, c3_signal,c1_signal ))
+
+
+
+
+
+```
+
+
+```{r echo=FALSE, warning=FALSE}
+
+
+# cusum_covid |>
+#   ggplot(aes(x = date)) +
+#   geom_line(aes(y = daily_cases), color = "blue") +
+#   # geom_line(aes(y = c1_value), color = "red") +
+#   # geom_line(aes(y = c2_value), color = "green") +
+#   # geom_line(aes(y = c3_value), color = "purple") +
+#   geom_point(aes(y = c1_signal * 1000), color = "red") +  # points for signal scaled by 1000
+#   geom_point(aes(y = c2_signal * 1000), color = "green") +  # points for signal scaled by 1000
+#    geom_point(aes(y = c3_signal * 1000), color = "purple") + # points for signal scaled by 1000
+#    geom_point(aes(y = c4_signal * 1000), color = "grey") +  # points for signal scaled by 1000
+#   geom_point(aes(y = c5_signal * 1000), color = "gold2") +  # points for signal scaled by 1000
+#   geom_point(aes(y = c6_signal * 1000), color = "black") +  # points for signal scaled by 1000
+#   labs(title = "CUSUM values for COVID-19 daily cases",
+#        y = "Counts / CUSUM values",
+#        x = "Date") +
+#   theme_minimal() +
+#   theme(plot.title = element_text(hjust = 0.5)) +
+#   scale_y_continuous(
+#     sec.axis = sec_axis(~ ./1000, name = "Signal (0/1)")
+#   ) +
+#   theme(
+#     axis.title.y.right = element_text(color = "black"),
+#     axis.text.y.right = element_text(color = "black")
+#   )
+
+
+
+```
+
+
+
+```{r}
+# plotting the CUSUM chart on COVID-19 daily cases with all signals
+cusum_covid |>
+  ggplot(aes(x = date)) +
+  geom_line(aes(y = daily_cases), color = "blue") +
+  geom_point(aes(y = c1_signal * 1000, color = "c1_signal")) +
+  geom_point(aes(y = c2_signal * 1000, color = "c2_signal")) +
+  geom_point(aes(y = c3_signal * 1000, color = "c3_signal")) +
+  geom_point(aes(y = c4_signal * 1000, color = "c4_signal")) +
+  geom_point(aes(y = c5_signal * 1000, color = "c5_signal")) +
+  geom_point(aes(y = c6_signal * 1000, color = "c6_signal")) +
+  scale_color_manual(
+    name = "Signal",
+    values = c(
+      "c1_signal" = "red",
+      "c2_signal" = "green",
+      "c3_signal" = "purple",
+      "c4_signal" = "grey",
+      "c5_signal" = "gold2",
+      "c6_signal" = "black"
+    )
+  ) +
+  labs(title = "CUSUM CHART for Daily cases",
+       y = "Counts / CUSUM values",
+       x = "Date") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(
+    sec.axis = sec_axis(~ ./1000, name = "Signal (0/1)")
+  ) +
+  theme(
+    axis.title.y.right = element_text(color = "black"),
+    axis.text.y.right = element_text(color = "black"),
+    legend.title = element_text(face = "bold"),
+    legend.position = "right"
+  )
+
+```
+
+
+# CUSUM analysis for Cholera data 
+
+```{r}
+
+
+# creating new variables using the daily counts of cases by calculating CUSUM values  and signals
+# Calculation are using the functions defined in CUSUM_help_fun.R
+
+
+
+cholera_daily_cases <-cholera |> 
+  select(date, cases) |>
+  group_by(date) |>
+  summarise(daily_cases = sum(cases)) 
+
+
+cusum_cholera<- cholera_daily_cases |> 
+  filter(date>="2022-03-11") |>
+  mutate(c1_value =cusum_1(daily_cases), 
+         c2_value=cusum_2(daily_cases), 
+        c3_value=cusum_3(c2_value), 
+        c1_signal=signal(c1_value), 
+        c2_signal=signal(c2_value), 
+        c3_signal=signal_2(c3_value), 
+        c4_signal=signal_4(c1_signal, c3_signal), 
+        c5_signal=signal_4(c2_signal, c3_signal), 
+        c6_signal=signal_6(c2_signal, c3_signal,c1_signal ))
+
+
+
+
+
+```
+
+
+
+```{r}
+
+
+# plotting the CUSUM chart on COVID-19 daily cases with all signals
+cusum_cholera |>
+  ggplot(aes(x = date)) +
+  geom_line(aes(y = daily_cases), color = "blue") +
+  geom_point(aes(y = c1_signal * 1000, color = "c1_signal")) +
+  geom_point(aes(y = c2_signal * 1000, color = "c2_signal")) +
+  geom_point(aes(y = c3_signal * 1000, color = "c3_signal")) +
+  geom_point(aes(y = c4_signal * 1000, color = "c4_signal")) +
+  geom_point(aes(y = c5_signal * 1000, color = "c5_signal")) +
+  geom_point(aes(y = c6_signal * 1000, color = "c6_signal")) +
+  scale_color_manual(
+    name = "Signal",
+    values = c(
+      "c1_signal" = "red",
+      "c2_signal" = "green",
+      "c3_signal" = "purple",
+      "c4_signal" = "grey",
+      "c5_signal" = "gold2",
+      "c6_signal" = "black"
+    )
+  ) +
+  labs(title = "CUSUM CHART for Cholera daily cases",
+       y = "Counts / CUSUM values",
+       x = "Date") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(
+    sec.axis = sec_axis(~ ./1000, name = "Signal (0/1)")
+  ) +
+  theme(
+    axis.title.y.right = element_text(color = "black"),
+    axis.text.y.right = element_text(color = "black"),
+    legend.title = element_text(face = "bold"),
+    legend.position = "right"
+  )
+
+
+
+```
+
+# CUSUM analysis for SARI data, routine data
+
+
+
+```{r}
+# creating new variables using the daily counts of cases by calculating CUSUM values  and signals
+
+
+cusum_sariview<- sari |> 
+  mutate(c1_value =cusum_1(ip_sari_cases), 
+         c2_value=cusum_2(ip_sari_cases), 
+        c3_value=cusum_3(c2_value), 
+        c1_signal=signal(c1_value), 
+        c2_signal=signal(c2_value), 
+        c3_signal=signal_2(c3_value), 
+        c4_signal=signal_4(c1_signal, c3_signal), 
+        c5_signal=signal_4(c2_signal, c3_signal), 
+        c6_signal=signal_6(c2_signal, c3_signal,c1_signal ))
+
+
+```
+
+
+
+
+```{r}
+
+
+cusum_sari |>
+  ggplot(aes(x = date)) +
+  geom_line(aes(y = ip_sari_cases), color = "blue") +
+  geom_point(aes(y = c1_signal * 1000, color = "c1_signal")) +
+  geom_point(aes(y = c2_signal * 1000, color = "c2_signal")) +
+  geom_point(aes(y = c3_signal * 1000, color = "c3_signal")) +
+  geom_point(aes(y = c4_signal * 1000, color = "c4_signal")) +
+  geom_point(aes(y = c5_signal * 1000, color = "c5_signal")) +
+  geom_point(aes(y = c6_signal * 1000, color = "c6_signal")) +
+  scale_color_manual(
+    name = "Signal",
+    values = c(
+      "c1_signal" = "red",
+      "c2_signal" = "green",
+      "c3_signal" = "purple",
+      "c4_signal" = "grey",
+      "c5_signal" = "gold2",
+      "c6_signal" = "black"
+    )
+  ) +
+  labs(title = "CUSUM CHART for sari cases",
+       y = "Counts / CUSUM values",
+       x = "Date") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(
+    sec.axis = sec_axis(~ ./1000, name = "Signal (0/1)")
+  ) +
+  theme(
+    axis.title.y.right = element_text(color = "black"),
+    axis.text.y.right = element_text(color = "black"),
+    legend.title = element_text(face = "bold"),
+    legend.position = "right"
+  )
+
+
+```
+
+
+
+# CUSUM analysis for Mpox data
+
+
+```{r}
+
+# creating new variables using the daily counts of cases by calculating CUSUM values  and signals
+
+cusum_mpox<- mpox |> 
+  mutate(c1_value=cusum_1(daily_cases), 
+         c2_value=cusum_2(daily_cases), 
+          c3_value=cusum_3(c2_value), 
+        c1_signal=signal(c1_value), 
+        c2_signal=signal(c2_value), 
+        c3_signal=signal_2(c3_value), 
+        c4_signal=signal_4(c1_signal, c3_signal), 
+        c5_signal=signal_4(c2_signal, c3_signal), 
+        c6_signal=signal_6(c2_signal, c3_signal,c1_signal ))
+
+
+```
+
+
+```{r}
+
+
+
+cusum_mpox |>
+  ggplot(aes(x = date)) +
+  geom_line(aes(y = daily_cases), color = "blue") +
+  geom_point(aes(y = c1_signal * 10, color = "c1_signal")) +
+  geom_point(aes(y = c2_signal * 10, color = "c2_signal")) +
+  geom_point(aes(y = c3_signal * 10, color = "c3_signal")) +
+  geom_point(aes(y = c4_signal * 10, color = "c4_signal")) +
+  geom_point(aes(y = c5_signal * 10, color = "c5_signal")) +
+  geom_point(aes(y = c6_signal * 10, color = "c6_signal")) +
+  scale_color_manual(
+    name = "Signal",
+    values = c(
+      "c1_signal" = "red",
+      "c2_signal" = "green",
+      "c3_signal" = "purple",
+      "c4_signal" = "grey",
+      "c5_signal" = "gold2",
+      "c6_signal" = "black"
+    )
+  ) +
+  labs(title = "CUSUM CHART Mpox suspected cases",
+       y = "Counts / CUSUM values",
+       x = "Date") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(
+    sec.axis = sec_axis(~ ./10, name = "Signal (0/1)")
+  ) +
+  theme(
+    axis.title.y.right = element_text(color = "black"),
+    axis.text.y.right = element_text(color = "black"),
+    legend.title = element_text(face = "bold"),
+    legend.position = "right"
+  )
+
+```
+

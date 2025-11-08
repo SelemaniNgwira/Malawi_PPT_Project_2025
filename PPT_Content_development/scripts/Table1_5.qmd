@@ -244,7 +244,12 @@ graph1 <- ppt_data %>%
   mutate(precent= round(Frequncy/sum(Frequncy), 3)*100)
 
 # plotting the chart 1
-graph1<- graph1 %>% 
+
+graph1<- graph1 |> 
+  mutate(across(where(is.character), str_to_title))
+
+
+ graph1<- graph1 %>% 
  ggplot(aes(x = reorder(Variable, precent), y = precent)) +
   geom_col(fill = "steelblue") +
   geom_label(aes(label = precent), vjust = 1.5, size = 4) +
@@ -256,7 +261,9 @@ graph1<- graph1 %>%
   theme_classic() +
   theme(
     legend.position = "none",   # remove legends if any
-    plot.title = element_text(hjust = 0.5, face = "bold") # center & bold title
+    plot.title = element_text(hjust = 0.5, face = "bold"), # center & bold title
+    axis.text.x = element_text(face = "bold", size = 14),
+    axis.text.y= element_text(face = "bold", size = 14),
   )+
   coord_flip()
 
@@ -295,6 +302,12 @@ graph2 <- ppt_data %>%
   mutate(precent= round(Frequncy/sum(Frequncy), 3)*100)
 
 # plotting the chart 2
+
+
+graph2<- graph2 |> 
+  mutate(across(where(is.character), str_to_title))
+
+
 graph2<- graph2 %>% 
   ggplot(aes(x = reorder(Variable, precent), y = precent)) +
   geom_col(fill = "steelblue") +
@@ -307,7 +320,9 @@ graph2<- graph2 %>%
   theme_classic() +
   theme(
     legend.position = "none",   # remove legends if any
-    plot.title = element_text(hjust = 0.5, face = "bold") # center & bold title
+    plot.title = element_text(hjust = 0.5, face = "bold"), # center & bold title
+    axis.text.x = element_text(face = "bold", size = 14),
+    axis.text.y= element_text(face = "bold", size = 14),
   )+
   coord_flip()
 
@@ -320,8 +335,7 @@ ggsave(
   dpi = 650,
   width = 12,
   height = 6,
-  units = "in"
-)
+  units = "in")
 
 
 

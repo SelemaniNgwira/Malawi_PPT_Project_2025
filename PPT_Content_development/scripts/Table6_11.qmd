@@ -149,6 +149,11 @@ table6 %>%
   bold_labels() |> 
   as_gt()
 
+
+
+
+
+
 ```
 
 ## Table 7.

@@ -124,7 +124,7 @@ Owenship of phone by district
 
 ```{r}
 
-map1<- map_data %>%
+map1 <- map_data %>%
     group_by(district) %>%
     count(electronic_have) %>%
     pivot_wider(names_from = electronic_have, values_from = n) %>%
@@ -137,19 +137,20 @@ map1<- map_data %>%
     ggplot() +
     geom_sf(aes(fill = perc_electronic)) +
     # scale_fill_viridis_c(option = "plasma", na.value = "white") +
-    theme_minimal() +
+    theme_void() +
     labs(title = "Percentage of Ownership of phone by District",
          fill = "Percentage(%)", 
          x = "Longitude",
          y = "Latitude")+
     geom_sf_text(aes(label =str_wrap(label_text,10)),size =3.8)+
-    scale_fill_continuous(low ="red",high ="green", na.value = "white") +
-    ggspatial::annotation_north_arrow(location = "br")+
-    ggspatial::annotation_scale(location = "tr")
+    scale_fill_continuous(low ="red",high ="green", na.value = "white")
+   
 
 
 
-ggsave(here("output","map1.png"),map1, width = 10, height = 16, units = "in", dpi = 600)
+ggsave(here("output","map1.png"),map1, bg="white",
+       width = 10, height = 16, 
+       units = "in", dpi = 600)
 
 
 
@@ -172,19 +173,19 @@ map2<- map_data %>%
     st_as_sf() |>
     ggplot() +
     geom_sf(aes(fill = perc_electronic)) +
-    theme_minimal() +
+    theme_void() +
     labs(title = "Percentage of smart phone ownership by district",
          fill = "Percentage(%)", 
          x = "Longitude",
          y = "Latitude")+
     geom_sf_text(aes(label =str_wrap(label_text,10)),size =3.8)+
-    scale_fill_continuous(low ="red",high ="green", na.value = "white") +
-    ggspatial::annotation_north_arrow(location = "br")+
-    ggspatial::annotation_scale(location = "tr")
+    scale_fill_continuous(low ="red",high ="green", na.value = "white") 
 
 
 
-ggsave(here("output","map2.png"),map2, width = 10, height = 16, units = "in", dpi = 600)
+ggsave(here("output","map2.png"),map2, bg="white",
+       width = 10, height = 16, 
+       units = "in", dpi = 600)
 
 
 ```
@@ -208,19 +209,18 @@ map3<- map_data %>%
     st_as_sf() |>
     ggplot() +
     geom_sf(aes(fill = perc_electronic)) +
-    theme_minimal() +
+    theme_void() +
     labs(title = "Awareness of digital health surveillance by district",
          fill = "Percentage(%)", 
          x = "Longitude",
          y = "Latitude")+
     geom_sf_text(aes(label =str_wrap(label_text,10)),size =3.8)+
-    scale_fill_continuous(low ="red",high ="green", na.value = "white") +
-    ggspatial::annotation_north_arrow(location = "br")+
-    ggspatial::annotation_scale(location = "tr")
+    scale_fill_continuous(low ="red",high ="green", na.value = "white") 
 
 
 
-ggsave(here("output","map3.png"),map3, width = 10, height = 16, units = "in", dpi = 600)
+ggsave(here("output","map3.png"),map3, bg="white",
+       width = 10, height = 16, units = "in", dpi = 600)
 
 ```
 
@@ -242,19 +242,17 @@ map4<- map_data %>%
     st_as_sf() |>
     ggplot() +
     geom_sf(aes(fill = perc_electronic)) +
-    theme_minimal() +
+    theme_void() +
     labs(title = "Use of mobile phone or app to receive or report health information by district",
          fill = "Percentage(%)", 
          x = "Longitude",
          y = "Latitude")+
     geom_sf_text(aes(label =str_wrap(label_text,10)),size =3.8)+
-    scale_fill_continuous(low ="red",high ="green", na.value = "white") +
-    ggspatial::annotation_north_arrow(location = "br")+
-    ggspatial::annotation_scale(location = "tr")
+    scale_fill_continuous(low ="red",high ="green", na.value = "white") 
 
 
-
-ggsave(here("output","map4.png"),map4, width = 10, height = 16, units = "in", dpi = 600)
+ggsave(here("output","map4.png"),map4, bg="white",
+       width = 10, height = 16, units = "in", dpi = 600)
 
 ```
  
@@ -277,18 +275,16 @@ map5<- map_data %>%
     st_as_sf() |>
     ggplot() +
     geom_sf(aes(fill = perc_electronic)) +
-    theme_minimal() +
+    theme_void() +
     labs(title = "Belief that using phones to report illnesses can improve healthcare in your community by district",
          fill = "Percentage(%)", 
          x = "Longitude",
          y = "Latitude")+
     geom_sf_text(aes(label =str_wrap(label_text,10)),size =3.8)+
-    scale_fill_continuous(low ="red",high ="green", na.value = "white") +
-    ggspatial::annotation_north_arrow(location = "br")+
-    ggspatial::annotation_scale(location = "tr")
+    scale_fill_continuous(low ="red",high ="green", na.value = "white") 
 
-
-ggsave(here("output","map5.png"),map5, width = 10, height = 16, units = "in", dpi = 600)
+ggsave(here("output","map5.png"),map5, width = 10, bg="white",
+       height = 16, units = "in", dpi = 600)
 
 
 
@@ -310,17 +306,17 @@ map6 <- map_data %>%
     st_as_sf() |>
     ggplot() +
     geom_sf(aes(fill = study_site)) +
-    theme_minimal() +
+    theme_void() + 
     labs(title = "Distribution of sample size by study sites",
          fill = "Study Site", 
          x = "Longitude",
          y = "Latitude")+
-    geom_sf_text(aes(label =str_wrap(label_text,10)),size =3.8)+
-    # scale_fill_continuous(low ="red",high ="green", na.value = "white") +
-    ggspatial::annotation_north_arrow(location = "br")+
-    ggspatial::annotation_scale(location = "tr")
+    geom_sf_text(aes(label =str_wrap(label_text,10)),size =3.8)
+    
+  
 
-ggsave(here("output","map6.png"),map6, width = 10, height = 16, units = "in", dpi = 600)
+ggsave(here("output","map6.png"),map6, bg="white",
+       width = 10, height = 16, units = "in", dpi = 600)
 
 
 ```

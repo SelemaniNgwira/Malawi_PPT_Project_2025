@@ -20,6 +20,9 @@ library(janitor)
 df1 <- import(here("data", "Daily_Cholera_Data.xlsx")) |> 
   clean_names() |> 
   select(date, district, cases, deaths)
+
+
+
   
 
 ```
@@ -39,14 +42,14 @@ df2<- df1 |>
 ```
 
 
-
+# ## Plotting dual axis plot
 
 
 ```{r}
 
 
 # Scaling factor so deaths align with secondary axis max = 100
-scale_factor <- max(df2$cases, na.rm = TRUE) / 100
+scale_factor <- max(df2$cases, na.rm = TRUE) / 1
 
 
 
@@ -55,17 +58,19 @@ df2 |>
   # Cases as bars
   geom_col(aes(y = cases), fill = "orange") +
   # Deaths as line (scaled)
-  geom_line(aes(y = deaths * scale_factor), 
+  geom_line(aes(y = deaths* scale_factor), 
             color = "red", size = 1) +
   # Primary and secondary axes
   scale_y_continuous(
     name = "Cases",
     sec.axis = sec_axis(~ . / scale_factor, 
-                        name = "Deaths (max = 100)")
+                        name = "Deaths")
   ) +
   labs(
     x = "Epidemiological Week",
-    title = "Weekly Epi curve of cholera cases in Malawi March 2022 to July 2024"
+    title = "Weekly Epi curve of cholera cases in Malawi March 2022 to July 2024", 
+    y= "Cases",
+    caption = "Source: Malawi Ministry of Health"
   ) +
   theme_minimal() +
   theme(
